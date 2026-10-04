@@ -1,0 +1,249 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum MaterialType {
+  LN2
+  LOX
+  ARGON
+}
+
+enum EquipmentStatus {
+  NORMAL
+  WARNING
+  CRITICAL
+  OFFLINE
+}
+
+enum AlertType {
+  TEMPERATURE
+  PRESSURE
+  LEVEL
+  MAINTENANCE
+  INSPECTION
+  INVENTORY
+}
+
+enum AlertSeverity {
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum MaintenanceStatus {
+  PENDING
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum InspectionResult {
+  PASS
+  NEEDS_ATTENTION
+  FAIL
+}
+
+enum TransactionType {
+  IN
+  OUT
+  ADJUST
+}
+
+enum RestockStatus {
+  PENDING
+  APPROVED
+  ORDERED
+  RECEIVED
+  REJECTED
+}
+
+model User {
+  id                    String                 @id @default(uuid())
+  name                  String
+  email                 String                 @unique
+  password_hash         String
+  role                  Role                   @default(STAFF)
+  is_active             Boolean                @default(true)
+  created_at            DateTime               @default(now())
+
+  inspections           Inspection[]
+  inventory_transactions InventoryTransaction[]
+  restock_requests      RestockRequest[]
+  audit_logs            AuditLog[]
+
+  @@map("users")
+}
+
+model Equipment {
+  id                String            @id @default(uuid())
+  code              String            @unique
+  name              String
+  material          MaterialType
+  capacity_l        Float
+  location          String
+  temp_warn_c       Float
+  temp_crit_c       Float
+  pressure_warn_bar Float
+  pressure_crit_bar Float
+  level_warn_pct    Float
+  level_crit_pct    Float
+  status            EquipmentStatus   @default(NORMAL)
+  created_at        DateTime          @default(now())
+
+  sensor_readings   SensorReading[]
+  alerts            Alert[]
+  maintenance_tasks MaintenanceTask[]
+  inspections       Inspection[]
+
+  @@map("equipment")
+}
+
+model SensorReading {
+  id            String    @id @default(uuid())
+  equipment_id  String
+  temperature_c Float
+  pressure_bar  Float
+  level_pct     Float
+  recorded_at   DateTime  @default(now())
+
+  equipment     Equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+
+  @@index([equipment_id, recorded_at(sort: Desc)])
+  @@map("sensor_readings")
+}
+
+model Alert {
+  id              String        @id @default(uuid())
+  equipment_id    String
+  type            AlertType
+  severity        AlertSeverity
+  message         String
+  value           Float?
+  status          AlertStatus   @default(OPEN)
+  acknowledged_by String?
+  acknowledged_at DateTime?
+  resolved_by     String?
+  resolved_at     DateTime?
+  created_at      DateTime      @default(now())
+
+  equipment       Equipment     @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+
+  @@map("alerts")
+}
+
+model MaintenanceTask {
+  id              String            @id @default(uuid())
+  equipment_id    String
+  title           String
+  description     String
+  due_date        DateTime
+  assigned_to     String?
+  status          MaintenanceStatus @default(PENDING)
+  recurrence_days Int?
+  completed_at    DateTime?
+  notes           String?
+
+  equipment       Equipment         @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+
+  @@map("maintenance_tasks")
+}
+
+model InspectionTemplate {
+  id          String       @id @default(uuid())
+  name        String
+  items       Json
+  inspections Inspection[]
+
+  @@map("inspection_templates")
+}
+
+model Inspection {
+  id                String             @id @default(uuid())
+  equipment_id      String
+  template_id       String
+  inspector_id      String
+  performed_at      DateTime           @default(now())
+  results           Json
+  overall           InspectionResult
+  findings          String?
+  corrective_action String?
+
+  equipment         Equipment          @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+  template          InspectionTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+  inspector         User               @relation(fields: [inspector_id], references: [id], onDelete: Cascade)
+
+  @@map("inspections")
+}
+
+model InventoryItem {
+  id              String                 @id @default(uuid())
+  name            String
+  material        String
+  unit            String
+  quantity        Float
+  min_quantity    Float
+
+  transactions    InventoryTransaction[]
+  restock_requests RestockRequest[]
+
+  @@map("inventory_items")
+}
+
+model InventoryTransaction {
+  id          String          @id @default(uuid())
+  item_id     String
+  type        TransactionType
+  quantity    Float
+  reason      String?
+  user_id     String
+  created_at  DateTime        @default(now())
+
+  item        InventoryItem   @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("inventory_transactions")
+}
+
+model RestockRequest {
+  id           String        @id @default(uuid())
+  item_id      String
+  quantity     Float
+  status       RestockStatus @default(PENDING)
+  requested_by String
+  created_at   DateTime      @default(now())
+
+  item         InventoryItem @relation(fields: [item_id], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [requested_by], references: [id], onDelete: Cascade)
+
+  @@map("restock_requests")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  user_id    String?
+  action     String
+  entity     String
+  entity_id  String
+  meta       Json?
+  created_at DateTime @default(now())
+
+  user       User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@map("audit_log")
+}

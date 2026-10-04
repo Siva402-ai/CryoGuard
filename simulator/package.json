@@ -1,0 +1,21 @@
+{
+  "name": "cryoguard-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CryoGuard Sensor Simulator Scaffold",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  }
+}
