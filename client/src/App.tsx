@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -6,10 +5,11 @@ import { RoleProtectedRoute } from './components/auth/RoleProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { EquipmentListPage } from './pages/EquipmentListPage';
+import { EquipmentDetailPage } from './pages/EquipmentDetailPage';
 import { UsersPage } from './pages/UsersPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import {
-  Container,
   Bell,
   Wrench,
   ClipboardCheck,
@@ -29,17 +29,9 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/" element={<DashboardPage />} />
-              <Route
-                path="/equipment"
-                element={
-                  <PlaceholderPage
-                    title="Storage Units"
-                    subtitle="Bulk cryogenic tank telemetry, temperature, pressure, and level indicators"
-                    phase="Phase 2"
-                    icon={Container}
-                  />
-                }
-              />
+              <Route path="/equipment" element={<EquipmentListPage />} />
+              <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
+
               <Route
                 path="/alerts"
                 element={
