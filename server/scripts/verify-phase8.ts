@@ -19,152 +19,232 @@ function generateToken(user: { id: string; role: Role; email: string; name: stri
   );
 }
 
+// ---------------------------------------------------------------------------
+// 1. Mutual Demote Race (20 runs)
+// ---------------------------------------------------------------------------
 async function runDemoteRaceTest(adminA: any, adminB: any, tokenA: string, tokenB: string) {
-  console.log('--- Race Scenario 1: Mutual Demote (A demotes B vs B demotes A) [20 runs] ---');
-  console.log('| Run | Admin A -> Demote B | Admin B -> Demote A | Final Active Admin Count | Result |');
-  console.log('|---|---|---|---|---|');
+  console.log('=== Scenario 1: Mutual Demote Race (20 runs) ===');
+  console.log('Run | HTTP Status A | HTTP Status B | Final Active Admins | Result');
+  console.log('----+---------------+---------------+---------------------+-------');
 
   for (let run = 1; run <= 20; run++) {
-    // Reset state: both Admin A and Admin B are active ADMINs
-    await prisma.user.update({
-      where: { id: adminA.id },
-      data: { role: Role.ADMIN, is_active: true },
-    });
-    await prisma.user.update({
-      where: { id: adminB.id },
-      data: { role: Role.ADMIN, is_active: true },
-    });
+    try {
+      // Restoration before every run: both admins set to active ADMIN
+      await prisma.user.update({
+        where: { id: adminA.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+      await prisma.user.update({
+        where: { id: adminB.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
 
-    // Launch simultaneous mutual demotions
-    const demoteB = fetch(`${API_BASE}/users/${adminB.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenA}`,
-      },
-      body: JSON.stringify({ name: adminB.name, email: adminB.email, role: 'STAFF' }),
-    }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
+      // Simultaneous mutual demote requests
+      const demoteB = fetch(`${API_BASE}/users/${adminB.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenA}`,
+        },
+        body: JSON.stringify({ name: adminB.name, email: adminB.email, role: 'STAFF' }),
+      }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
 
-    const demoteA = fetch(`${API_BASE}/users/${adminA.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenB}`,
-      },
-      body: JSON.stringify({ name: adminA.name, email: adminA.email, role: 'STAFF' }),
-    }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
+      const demoteA = fetch(`${API_BASE}/users/${adminA.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenB}`,
+        },
+        body: JSON.stringify({ name: adminA.name, email: adminA.email, role: 'STAFF' }),
+      }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
 
-    const [resA, resB] = await Promise.all([demoteB, demoteA]);
+      const [resA, resB] = await Promise.all([demoteB, demoteA]);
 
-    const activeAdmins = await prisma.user.count({
-      where: { role: Role.ADMIN, is_active: true },
-    });
+      // Query final active admin count directly from PostgreSQL
+      const activeAdmins = await prisma.user.count({
+        where: { role: Role.ADMIN, is_active: true },
+      });
 
-    const statusA = resA.ok ? '200 OK' : `${resA.status} (Blocked)`;
-    const statusB = resB.ok ? '200 OK' : `${resB.status} (Blocked)`;
-    const pass = activeAdmins === 1 ? 'PASS (1 Admin Left)' : 'FAIL';
+      const strStatusA = `${resA.status} ${resA.ok ? 'OK' : 'ERR'}`;
+      const strStatusB = `${resB.status} ${resB.ok ? 'OK' : 'ERR'}`;
+      const resultStr = activeAdmins === 1 ? 'PASS' : 'FAIL';
 
-    console.log(`| Run ${run.toString().padStart(2, ' ')} | ${statusA.padEnd(20, ' ')} | ${statusB.padEnd(20, ' ')} | ${activeAdmins.toString().padEnd(24, ' ')} | ${pass} |`);
+      console.log(
+        `${String(run).padStart(3, ' ')} | ` +
+        `${strStatusA.padEnd(13, ' ')} | ` +
+        `${strStatusB.padEnd(13, ' ')} | ` +
+        `${String(activeAdmins).padEnd(19, ' ')} | ` +
+        `${resultStr}`
+      );
+    } finally {
+      // Restore state after each run
+      await prisma.user.update({
+        where: { id: adminA.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+      await prisma.user.update({
+        where: { id: adminB.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+    }
   }
 }
 
+// ---------------------------------------------------------------------------
+// 2. Mutual Deactivate Race (20 runs)
+// ---------------------------------------------------------------------------
 async function runDeactivateRaceTest(adminA: any, adminB: any, tokenA: string, tokenB: string) {
-  console.log('\n--- Race Scenario 2: Mutual Deactivate (A deactivates B vs B deactivates A) [20 runs] ---');
-  console.log('| Run | Admin A -> Deact B  | Admin B -> Deact A  | Final Active Admin Count | Result |');
-  console.log('|---|---|---|---|---|');
+  console.log('\n=== Scenario 2: Mutual Deactivate Race (20 runs) ===');
+  console.log('Run | HTTP Status A | HTTP Status B | Final Active Admins | Result');
+  console.log('----+---------------+---------------+---------------------+-------');
 
   for (let run = 1; run <= 20; run++) {
-    // Reset state: both Admin A and Admin B are active ADMINs
-    await prisma.user.update({
-      where: { id: adminA.id },
-      data: { role: Role.ADMIN, is_active: true },
-    });
-    await prisma.user.update({
-      where: { id: adminB.id },
-      data: { role: Role.ADMIN, is_active: true },
-    });
+    try {
+      // Restoration before every run: both admins set to active ADMIN
+      await prisma.user.update({
+        where: { id: adminA.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+      await prisma.user.update({
+        where: { id: adminB.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
 
-    // Launch simultaneous mutual deactivations
-    const deactB = fetch(`${API_BASE}/users/${adminB.id}/deactivate`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenA}`,
-      },
-    }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
+      // Simultaneous mutual deactivate requests
+      const deactB = fetch(`${API_BASE}/users/${adminB.id}/deactivate`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenA}`,
+        },
+      }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
 
-    const deactA = fetch(`${API_BASE}/users/${adminA.id}/deactivate`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenB}`,
-      },
-    }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
+      const deactA = fetch(`${API_BASE}/users/${adminA.id}/deactivate`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenB}`,
+        },
+      }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
 
-    const [resA, resB] = await Promise.all([deactB, deactA]);
+      const [resA, resB] = await Promise.all([deactB, deactA]);
 
-    const activeAdmins = await prisma.user.count({
-      where: { role: Role.ADMIN, is_active: true },
-    });
+      // Query final active admin count directly from PostgreSQL
+      const activeAdmins = await prisma.user.count({
+        where: { role: Role.ADMIN, is_active: true },
+      });
 
-    const statusA = resA.ok ? '200 OK' : `${resA.status} (Blocked)`;
-    const statusB = resB.ok ? '200 OK' : `${resB.status} (Blocked)`;
-    const pass = activeAdmins === 1 ? 'PASS (1 Admin Left)' : 'FAIL';
+      const strStatusA = `${resA.status} ${resA.ok ? 'OK' : 'ERR'}`;
+      const strStatusB = `${resB.status} ${resB.ok ? 'OK' : 'ERR'}`;
+      const resultStr = activeAdmins === 1 ? 'PASS' : 'FAIL';
 
-    console.log(`| Run ${run.toString().padStart(2, ' ')} | ${statusA.padEnd(20, ' ')} | ${statusB.padEnd(20, ' ')} | ${activeAdmins.toString().padEnd(24, ' ')} | ${pass} |`);
+      console.log(
+        `${String(run).padStart(3, ' ')} | ` +
+        `${strStatusA.padEnd(13, ' ')} | ` +
+        `${strStatusB.padEnd(13, ' ')} | ` +
+        `${String(activeAdmins).padEnd(19, ' ')} | ` +
+        `${resultStr}`
+      );
+    } finally {
+      // Restore state after each run
+      await prisma.user.update({
+        where: { id: adminA.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+      await prisma.user.update({
+        where: { id: adminB.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+    }
   }
 }
 
+// ---------------------------------------------------------------------------
+// 3. Mixed Race: A demotes B vs B deactivates A (20 runs)
+// ---------------------------------------------------------------------------
 async function runMixedRaceTest(adminA: any, adminB: any, tokenA: string, tokenB: string) {
-  console.log('\n--- Race Scenario 3: Mixed (A demotes B vs B deactivates A) [20 runs] ---');
-  console.log('| Run | Admin A -> Demote B | Admin B -> Deact A  | Final Active Admin Count | Result |');
-  console.log('|---|---|---|---|---|');
+  console.log('\n=== Scenario 3: Mixed Race (A Demotes B vs B Deactivates A) (20 runs) ===');
+  console.log('Run | HTTP Status A | HTTP Status B | Final Active Admins | Result');
+  console.log('----+---------------+---------------+---------------------+-------');
 
   for (let run = 1; run <= 20; run++) {
-    // Reset state: both Admin A and Admin B are active ADMINs
-    await prisma.user.update({
-      where: { id: adminA.id },
-      data: { role: Role.ADMIN, is_active: true },
-    });
-    await prisma.user.update({
-      where: { id: adminB.id },
-      data: { role: Role.ADMIN, is_active: true },
-    });
+    try {
+      // Restoration before every run: both admins set to active ADMIN
+      await prisma.user.update({
+        where: { id: adminA.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+      await prisma.user.update({
+        where: { id: adminB.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
 
-    // Launch simultaneous mixed actions: A demotes B, B deactivates A
-    const demoteB = fetch(`${API_BASE}/users/${adminB.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenA}`,
-      },
-      body: JSON.stringify({ name: adminB.name, email: adminB.email, role: 'STAFF' }),
-    }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
+      // Simultaneous mixed requests: A demotes B (PUT), B deactivates A (PATCH)
+      const demoteB = fetch(`${API_BASE}/users/${adminB.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenA}`,
+        },
+        body: JSON.stringify({ name: adminB.name, email: adminB.email, role: 'STAFF' }),
+      }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
 
-    const deactA = fetch(`${API_BASE}/users/${adminA.id}/deactivate`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenB}`,
-      },
-    }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
+      const deactA = fetch(`${API_BASE}/users/${adminA.id}/deactivate`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenB}`,
+        },
+      }).then(async (r) => ({ status: r.status, ok: r.ok, data: await r.json() }));
 
-    const [resA, resB] = await Promise.all([demoteB, deactA]);
+      const [resA, resB] = await Promise.all([demoteB, deactA]);
 
-    const activeAdmins = await prisma.user.count({
-      where: { role: Role.ADMIN, is_active: true },
-    });
+      // Query final active admin count directly from PostgreSQL
+      const activeAdmins = await prisma.user.count({
+        where: { role: Role.ADMIN, is_active: true },
+      });
 
-    const statusA = resA.ok ? '200 OK' : `${resA.status} (Blocked)`;
-    const statusB = resB.ok ? '200 OK' : `${resB.status} (Blocked)`;
-    const pass = activeAdmins === 1 ? 'PASS (1 Admin Left)' : 'FAIL';
+      const strStatusA = `${resA.status} ${resA.ok ? 'OK' : 'ERR'}`;
+      const strStatusB = `${resB.status} ${resB.ok ? 'OK' : 'ERR'}`;
+      const resultStr = activeAdmins === 1 ? 'PASS' : 'FAIL';
 
-    console.log(`| Run ${run.toString().padStart(2, ' ')} | ${statusA.padEnd(20, ' ')} | ${statusB.padEnd(20, ' ')} | ${activeAdmins.toString().padEnd(24, ' ')} | ${pass} |`);
+      console.log(
+        `${String(run).padStart(3, ' ')} | ` +
+        `${strStatusA.padEnd(13, ' ')} | ` +
+        `${strStatusB.padEnd(13, ' ')} | ` +
+        `${String(activeAdmins).padEnd(19, ' ')} | ` +
+        `${resultStr}`
+      );
+    } finally {
+      // Restore state after each run
+      await prisma.user.update({
+        where: { id: adminA.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+      await prisma.user.update({
+        where: { id: adminB.id },
+        data: { role: Role.ADMIN, is_active: true },
+      });
+    }
   }
 }
 
+// ---------------------------------------------------------------------------
+// 4. Extra Edge Cases
+// ---------------------------------------------------------------------------
 async function runExtraCases() {
-  console.log('\n--- Running Extra Edge Cases ---');
+  console.log('\n=== Extra Edge Cases ===');
+
+  // Ensure primary admin is ADMIN and Arun is STAFF
+  await prisma.user.update({
+    where: { email: 'admin@cryoguard.com' },
+    data: { role: Role.ADMIN, is_active: true },
+  });
+  await prisma.user.update({
+    where: { email: 'arun@cryoguard.com' },
+    data: { role: Role.STAFF, is_active: true },
+  });
+
   const adminUser = await prisma.user.findUnique({ where: { email: 'admin@cryoguard.com' } });
   const staffUser = await prisma.user.findUnique({ where: { email: 'arun@cryoguard.com' } });
 
@@ -236,76 +316,52 @@ async function runExtraCases() {
     });
     console.log('6. Login deactivated user with WRONG password (expect 401 generic error):', r6.status, JSON.stringify(await r6.json()));
   } finally {
+    // Clean up temporary user account (do not delete audit logs)
     await prisma.user.delete({ where: { id: tempUser.id } });
   }
 }
 
 async function main() {
-  const passwordHash = await bcrypt.hash('Admin@123456', 10);
-  let adminA: any = null;
-  let adminB: any = null;
+  const adminA = await prisma.user.findUnique({ where: { email: 'admin@cryoguard.com' } });
+  const adminB = await prisma.user.findUnique({ where: { email: 'arun@cryoguard.com' } });
+
+  if (!adminA || !adminB) {
+    throw new Error('Required seeded users admin@cryoguard.com and arun@cryoguard.com not found');
+  }
+
+  // Ensure other seeded users (Ravi) are STAFF so active admin count starts at exactly 2
+  await prisma.user.updateMany({
+    where: { email: { notIn: ['admin@cryoguard.com', 'arun@cryoguard.com'] } },
+    data: { role: Role.STAFF },
+  });
+
+  const tokenA = generateToken({ id: adminA.id, role: Role.ADMIN, email: adminA.email, name: adminA.name });
+  const tokenB = generateToken({ id: adminB.id, role: Role.ADMIN, email: adminB.email, name: adminB.name });
 
   try {
-    adminA = await prisma.user.upsert({
-      where: { email: 'admin_a_race@cryoguard.test' },
-      update: { role: Role.ADMIN, is_active: true, password_hash: passwordHash },
-      create: {
-        name: 'Admin Alpha Test',
-        email: 'admin_a_race@cryoguard.test',
-        role: Role.ADMIN,
-        password_hash: passwordHash,
-        is_active: true,
-      },
-    });
-
-    adminB = await prisma.user.upsert({
-      where: { email: 'admin_b_race@cryoguard.test' },
-      update: { role: Role.ADMIN, is_active: true, password_hash: passwordHash },
-      create: {
-        name: 'Admin Beta Test',
-        email: 'admin_b_race@cryoguard.test',
-        role: Role.ADMIN,
-        password_hash: passwordHash,
-        is_active: true,
-      },
-    });
-
-    // Temporarily demote default seeded admin so only Admin A and Admin B are ADMINs (exactly 2 admins)
-    await prisma.user.updateMany({
-      where: { email: 'admin@cryoguard.com' },
-      data: { role: Role.STAFF },
-    });
-
-    const tokenA = generateToken({ id: adminA.id, role: Role.ADMIN, email: adminA.email, name: adminA.name });
-    const tokenB = generateToken({ id: adminB.id, role: Role.ADMIN, email: adminB.email, name: adminB.name });
-
     await runDemoteRaceTest(adminA, adminB, tokenA, tokenB);
     await runDeactivateRaceTest(adminA, adminB, tokenA, tokenB);
     await runMixedRaceTest(adminA, adminB, tokenA, tokenB);
-
-    // Restore primary admin before running extra cases
-    await prisma.user.updateMany({
-      where: { email: 'admin@cryoguard.com' },
-      data: { role: Role.ADMIN, is_active: true },
-    });
-
     await runExtraCases();
   } catch (err) {
     console.error('Execution error:', err);
   } finally {
-    // Teardown: ALWAYS restore primary admin and delete test users without touching audit_log
+    // Final restoration: admin@cryoguard.com is ADMIN and active, arun@cryoguard.com is STAFF and active
     try {
-      await prisma.user.updateMany({
+      await prisma.user.update({
         where: { email: 'admin@cryoguard.com' },
         data: { role: Role.ADMIN, is_active: true },
       });
-      await prisma.user.deleteMany({
-        where: {
-          email: { in: ['admin_a_race@cryoguard.test', 'admin_b_race@cryoguard.test'] },
-        },
+      await prisma.user.update({
+        where: { email: 'arun@cryoguard.com' },
+        data: { role: Role.STAFF, is_active: true },
+      });
+      await prisma.user.update({
+        where: { email: 'ravi@cryoguard.com' },
+        data: { role: Role.STAFF, is_active: true },
       });
     } catch (cleanupErr) {
-      console.error('Cleanup error:', cleanupErr);
+      console.error('Final restore error:', cleanupErr);
     }
     await prisma.$disconnect();
   }
