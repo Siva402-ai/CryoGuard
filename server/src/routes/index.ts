@@ -10,6 +10,7 @@ import { maintenanceRouter } from './maintenance.routes';
 import { inspectionTemplateRouter, inspectionRouter } from './inspection.routes';
 import { inventoryRouter, restockRouter } from './inventory.routes';
 import { reportRouter } from './report.routes';
+import { auditRouter } from './audit.routes';
 
 export const apiRouter = Router();
 
@@ -26,4 +27,6 @@ apiRouter.use('/inspections', inspectionRouter);
 apiRouter.use('/inventory', inventoryRouter);
 apiRouter.use('/restock-requests', restockRouter);
 apiRouter.use('/reports', reportRouter);
+apiRouter.use('/audit-log', auditRouter);
+
 

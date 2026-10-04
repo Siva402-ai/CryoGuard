@@ -38,8 +38,8 @@ export const login = async (req: Request, res: Response) => {
     }
 
     if (!user.is_active) {
-      return res.status(403).json({
-        error: 'Forbidden',
+      return res.status(401).json({
+        error: 'Unauthorized',
         message: 'Your account is deactivated. Please contact an administrator.',
       });
     }

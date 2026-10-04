@@ -61,8 +61,8 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     }
 
     if (!user.is_active) {
-      return res.status(403).json({
-        error: 'Forbidden',
+      return res.status(401).json({
+        error: 'Unauthorized',
         message: 'Your account has been deactivated. Contact an administrator.',
       });
     }

@@ -358,9 +358,26 @@ export const streamAlerts = async (req: Request, res: Response) => {
 
     redisSub.on('message', messageListener);
 
-    // 6. Send heartbeat comment every 25 seconds
-    const heartbeatTimer = setInterval(() => {
-      res.write(': heartbeat\n\n');
+    // 6. Send heartbeat comment every 25 seconds and re-check user active status
+    const heartbeatTimer = setInterval(async () => {
+      try {
+        const currentUser = await prisma.user.findUnique({
+          where: { id: decoded.userId },
+          select: { is_active: true },
+        });
+
+        if (!currentUser || !currentUser.is_active) {
+          clearInterval(heartbeatTimer);
+          redisSub.removeListener('message', messageListener);
+          res.write('event: close\ndata: {"status":"disconnected","message":"Account deactivated"}\n\n');
+          res.end();
+          return;
+        }
+
+        res.write(': heartbeat\n\n');
+      } catch {
+        res.write(': heartbeat\n\n');
+      }
     }, 25000);
 
     // 7. Cleanup on client disconnect
