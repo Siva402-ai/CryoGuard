@@ -1,10 +1,29 @@
+import 'dotenv/config';
+import express from 'express';
 import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { apiRouter } from '../src/routes';
 
-const API_BASE = process.env.API_BASE || 'http://localhost:4000/api';
+const dbUrl = process.env.DATABASE_URL || '';
+if (!dbUrl.includes('cryoguard_test')) {
+  console.error('ERROR: verify-phase8.ts must run against cryoguard_test database only. DATABASE_URL does not contain "cryoguard_test".');
+  process.exit(1);
+}
+
+const testApp = express();
+testApp.use(express.json());
+testApp.use('/api', apiRouter);
+
+const testServer = testApp.listen(0);
+const assignedPort = (testServer.address() as any).port;
+const API_BASE = `http://localhost:${assignedPort}/api`;
 const JWT_SECRET = process.env.JWT_SECRET || 'cryoguard_super_secret_jwt_key_development_2026';
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: { url: dbUrl },
+  },
+});
 
 function generateToken(user: { id: string; role: Role; email: string; name: string }): string {
   return jwt.sign(
@@ -363,7 +382,9 @@ async function main() {
     } catch (cleanupErr) {
       console.error('Final restore error:', cleanupErr);
     }
+    testServer.close();
     await prisma.$disconnect();
+    process.exit(0);
   }
 }
 

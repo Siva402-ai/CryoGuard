@@ -3,9 +3,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db/prisma';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'cryoguard_super_secret_jwt_key_development_2026';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/auth';
 
 const loginSchema = z.object({
   email: z.string().trim().email('Please enter a valid email address'),

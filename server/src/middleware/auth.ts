@@ -3,8 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Role } from '@prisma/client';
 import { AuthUser } from '../types/express';
 import { prisma } from '../db/prisma';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'cryoguard_super_secret_jwt_key_development_2026';
+import { JWT_SECRET } from '../config/auth';
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {

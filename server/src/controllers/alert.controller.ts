@@ -5,8 +5,7 @@ import { AlertStatus, AlertSeverity, AlertType } from '@prisma/client';
 import { prisma } from '../db/prisma';
 import { redis, redisSub } from '../db/redis';
 import { writeAudit } from '../utils/audit';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'cryoguard_super_secret_jwt_key_development_2026';
+import { JWT_SECRET } from '../config/auth';
 
 const alertsQuerySchema = z.object({
   status: z.string().optional(),
@@ -95,6 +94,20 @@ export const getAlerts = async (req: Request, res: Response) => {
               location: true,
             },
           },
+          acknowledgedBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          resolvedBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       }),
       prisma.alert.count({ where: whereClause }),
@@ -143,18 +156,24 @@ export const acknowledgeAlert = async (req: Request, res: Response) => {
       });
     }
 
-    const userName = req.user?.name || req.user?.email || 'Authorized Staff';
+    const userId = req.user?.userId || null;
 
     const updated = await prisma.alert.update({
       where: { id },
       data: {
         status: AlertStatus.ACKNOWLEDGED,
-        acknowledged_by: userName,
+        acknowledged_by: userId,
         acknowledged_at: new Date(),
       },
       include: {
         equipment: {
           select: { id: true, code: true, name: true, material: true, location: true },
+        },
+        acknowledgedBy: {
+          select: { id: true, name: true, email: true },
+        },
+        resolvedBy: {
+          select: { id: true, name: true, email: true },
         },
       },
     });
@@ -191,11 +210,13 @@ export const acknowledgeAlert = async (req: Request, res: Response) => {
       message: 'Alert acknowledged successfully',
       alert: updated,
     });
-  } catch (error) {
-    console.error('acknowledgeAlert error:', error);
+  } catch (error: any) {
+    console.error('acknowledgeAlert error message:', error?.message);
+    console.error('acknowledgeAlert error stack:', error?.stack);
+    console.error('acknowledgeAlert error code:', error?.code);
     return res.status(500).json({
       error: 'Internal Server Error',
-      message: 'Failed to acknowledge alert.',
+      message: error?.message || 'Failed to acknowledge alert.',
     });
   }
 };
@@ -209,6 +230,12 @@ export const resolveAlert = async (req: Request, res: Response) => {
       include: {
         equipment: {
           select: { id: true, code: true, name: true, material: true, location: true },
+        },
+        acknowledgedBy: {
+          select: { id: true, name: true, email: true },
+        },
+        resolvedBy: {
+          select: { id: true, name: true, email: true },
         },
       },
     });
@@ -227,18 +254,24 @@ export const resolveAlert = async (req: Request, res: Response) => {
       });
     }
 
-    const userName = req.user?.name || req.user?.email || 'Authorized Staff';
+    const userId = req.user?.userId || null;
 
     const updated = await prisma.alert.update({
       where: { id },
       data: {
         status: AlertStatus.RESOLVED,
-        resolved_by: userName,
+        resolved_by: userId,
         resolved_at: new Date(),
       },
       include: {
         equipment: {
           select: { id: true, code: true, name: true, material: true, location: true },
+        },
+        acknowledgedBy: {
+          select: { id: true, name: true, email: true },
+        },
+        resolvedBy: {
+          select: { id: true, name: true, email: true },
         },
       },
     });

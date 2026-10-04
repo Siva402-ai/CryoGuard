@@ -43,16 +43,20 @@ const ACTION_LABELS: Record<string, { label: string; color: string; bg: string }
   DELETE_EQUIPMENT: { label: 'Equipment removed', color: '#D92D20', bg: '#FDECEA' },
   ACKNOWLEDGE_ALERT: { label: 'Alert acknowledged', color: '#C77700', bg: '#FFF4DE' },
   RESOLVE_ALERT: { label: 'Alert resolved', color: '#0E9F6E', bg: '#E7F8F0' },
-  CREATE_MAINTENANCE: { label: 'Maintenance created', color: '#1A2BC3', bg: '#EEF1FF' },
-  UPDATE_MAINTENANCE: { label: 'Maintenance updated', color: '#4AA8B5', bg: '#EBF7F9' },
-  COMPLETE_MAINTENANCE: { label: 'Maintenance completed', color: '#0E9F6E', bg: '#E7F8F0' },
+  CREATE_MAINTENANCE_TASK: { label: 'Maintenance created', color: '#1A2BC3', bg: '#EEF1FF' },
+  CREATE_RECURRING_MAINTENANCE_TASK: { label: 'Recurring task created', color: '#1A2BC3', bg: '#EEF1FF' },
+  UPDATE_MAINTENANCE_TASK: { label: 'Maintenance updated', color: '#4AA8B5', bg: '#EBF7F9' },
+  COMPLETE_MAINTENANCE_TASK: { label: 'Maintenance completed', color: '#0E9F6E', bg: '#E7F8F0' },
   CREATE_INSPECTION_TEMPLATE: { label: 'Template created', color: '#1A2BC3', bg: '#EEF1FF' },
   CREATE_INSPECTION: { label: 'Inspection recorded', color: '#0E9F6E', bg: '#E7F8F0' },
   CREATE_INVENTORY_ITEM: { label: 'Item registered', color: '#1A2BC3', bg: '#EEF1FF' },
   UPDATE_INVENTORY_ITEM: { label: 'Item updated', color: '#4AA8B5', bg: '#EBF7F9' },
-  CREATE_TRANSACTION: { label: 'Inventory transaction', color: '#6B7BE8', bg: '#F0F2FD' },
+  INVENTORY_TRANSACTION: { label: 'Inventory transaction', color: '#6B7BE8', bg: '#F0F2FD' },
   CREATE_RESTOCK_REQUEST: { label: 'Restock requested', color: '#C77700', bg: '#FFF4DE' },
-  UPDATE_RESTOCK_REQUEST: { label: 'Restock updated', color: '#4AA8B5', bg: '#EBF7F9' },
+  RESTOCK_REQUEST_APPROVE: { label: 'Restock approved', color: '#0E9F6E', bg: '#E7F8F0' },
+  RESTOCK_REQUEST_REJECT: { label: 'Restock rejected', color: '#D92D20', bg: '#FDECEA' },
+  RESTOCK_REQUEST_ORDER: { label: 'Restock ordered', color: '#4AA8B5', bg: '#EBF7F9' },
+  RESTOCK_REQUEST_RECEIVE: { label: 'Restock received', color: '#0E9F6E', bg: '#E7F8F0' },
 };
 
 function generateStrongPassword(): string {
@@ -562,15 +566,20 @@ export const UsersPage: React.FC = () => {
                   <option value="DELETE_EQUIPMENT">DELETE_EQUIPMENT</option>
                   <option value="ACKNOWLEDGE_ALERT">ACKNOWLEDGE_ALERT</option>
                   <option value="RESOLVE_ALERT">RESOLVE_ALERT</option>
-                  <option value="CREATE_MAINTENANCE">CREATE_MAINTENANCE</option>
-                  <option value="UPDATE_MAINTENANCE">UPDATE_MAINTENANCE</option>
-                  <option value="COMPLETE_MAINTENANCE">COMPLETE_MAINTENANCE</option>
+                  <option value="CREATE_MAINTENANCE_TASK">CREATE_MAINTENANCE_TASK</option>
+                  <option value="CREATE_RECURRING_MAINTENANCE_TASK">CREATE_RECURRING_MAINTENANCE_TASK</option>
+                  <option value="UPDATE_MAINTENANCE_TASK">UPDATE_MAINTENANCE_TASK</option>
+                  <option value="COMPLETE_MAINTENANCE_TASK">COMPLETE_MAINTENANCE_TASK</option>
+                  <option value="CREATE_INSPECTION_TEMPLATE">CREATE_INSPECTION_TEMPLATE</option>
                   <option value="CREATE_INSPECTION">CREATE_INSPECTION</option>
                   <option value="CREATE_INVENTORY_ITEM">CREATE_INVENTORY_ITEM</option>
                   <option value="UPDATE_INVENTORY_ITEM">UPDATE_INVENTORY_ITEM</option>
-                  <option value="CREATE_TRANSACTION">CREATE_TRANSACTION</option>
+                  <option value="INVENTORY_TRANSACTION">INVENTORY_TRANSACTION</option>
                   <option value="CREATE_RESTOCK_REQUEST">CREATE_RESTOCK_REQUEST</option>
-                  <option value="UPDATE_RESTOCK_REQUEST">UPDATE_RESTOCK_REQUEST</option>
+                  <option value="RESTOCK_REQUEST_APPROVE">RESTOCK_REQUEST_APPROVE</option>
+                  <option value="RESTOCK_REQUEST_REJECT">RESTOCK_REQUEST_REJECT</option>
+                  <option value="RESTOCK_REQUEST_ORDER">RESTOCK_REQUEST_ORDER</option>
+                  <option value="RESTOCK_REQUEST_RECEIVE">RESTOCK_REQUEST_RECEIVE</option>
                 </select>
               </div>
 

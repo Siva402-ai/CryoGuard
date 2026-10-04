@@ -114,7 +114,7 @@ async function evaluateInventoryAlert(
         where: { id: activeAlert.id },
         data: {
           status: AlertStatus.RESOLVED,
-          resolved_by: userName,
+          resolved_by: _userId || null,
           resolved_at: new Date(),
         },
       });

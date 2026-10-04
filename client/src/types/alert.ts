@@ -16,6 +16,12 @@ export interface AlertEquipment {
   location: string;
 }
 
+export interface AlertUser {
+  id: string;
+  name: string;
+  email?: string;
+}
+
 export interface Alert {
   id: string;
   equipment_id: string | null;
@@ -31,6 +37,8 @@ export interface Alert {
   resolved_at: string | null;
   created_at: string;
   equipment?: AlertEquipment | null;
+  acknowledgedBy?: AlertUser | null;
+  resolvedBy?: AlertUser | null;
 }
 
 export interface AlertsResponse {

@@ -375,7 +375,7 @@ export const AlertsPage: React.FC = () => {
                         {isRes ? (
                           <div>
                             <span className="font-semibold text-status-success block">
-                              Res: {alert.resolved_by}
+                              Res: {alert.resolvedBy?.name || alert.resolved_by || 'Staff'}
                             </span>
                             {alert.resolved_at && (
                               <span className="text-[10px] text-muted">
@@ -389,7 +389,7 @@ export const AlertsPage: React.FC = () => {
                         ) : isAck ? (
                           <div>
                             <span className="font-semibold text-primary block">
-                              Ack: {alert.acknowledged_by}
+                              Ack: {alert.acknowledgedBy?.name || alert.acknowledged_by || 'Staff'}
                             </span>
                             {alert.acknowledged_at && (
                               <span className="text-[10px] text-muted">

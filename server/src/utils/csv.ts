@@ -22,9 +22,13 @@ export function escapeCsvCell(val: unknown): string {
 
   let str = String(val);
 
-  // Neutralize formula injection for text starting with =, +, -, @
-  // Only apply to non-numeric strings (e.g. keep -184.99 or +42 as plain numbers, but neutralize -cmd, +alert, =SUM, @import)
-  const isFormulaChar = str.startsWith('=') || str.startsWith('@');
+  // Neutralize formula injection for text starting with =, +, -, @, \t, \r
+  // Only apply to non-numeric strings (e.g. keep -184.99 or +42 as plain numbers, but neutralize -cmd, +alert, =SUM, @import, \tcmd, \rcmd)
+  const isFormulaChar =
+    str.startsWith('=') ||
+    str.startsWith('@') ||
+    str.startsWith('\t') ||
+    str.startsWith('\r');
   const isSignPrefix = (str.startsWith('+') || str.startsWith('-')) && isNaN(Number(str));
 
   if (isFormulaChar || isSignPrefix) {

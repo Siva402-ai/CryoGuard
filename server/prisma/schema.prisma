@@ -86,6 +86,8 @@ model User {
   inventory_transactions InventoryTransaction[]
   restock_requests      RestockRequest[]
   audit_logs            AuditLog[]
+  acknowledged_alerts   Alert[]                @relation("AlertAcknowledgedBy")
+  resolved_alerts       Alert[]                @relation("AlertResolvedBy")
 
   @@map("users")
 }
@@ -144,6 +146,8 @@ model Alert {
   created_at      DateTime      @default(now())
 
   equipment       Equipment?    @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+  acknowledgedBy  User?         @relation("AlertAcknowledgedBy", fields: [acknowledged_by], references: [id], onDelete: SetNull)
+  resolvedBy      User?         @relation("AlertResolvedBy", fields: [resolved_by], references: [id], onDelete: SetNull)
 
   @@map("alerts")
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, ArrowRight, ShieldCheck, UserCheck } from 'lucide-react';
+import { AlertCircle, ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login, isAuthenticated } = useAuth();
@@ -44,12 +44,6 @@ export const LoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError(null);
   };
 
   return (
@@ -144,66 +138,6 @@ export const LoginPage: React.FC = () => {
               )}
             </button>
           </form>
-
-          {/* Demo Credentials Quick-Fill Pills */}
-          <div className="mt-6 pt-5 border-t border-border/80">
-            <span className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-2.5 text-center">
-              Quick demo accounts
-            </span>
-
-            <div className="grid grid-cols-1 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickFill('admin@cryoguard.com', 'Admin@123456')}
-                className="w-full px-3 py-2 rounded-xl border border-border bg-[#F8FAFD] hover:bg-primary-soft hover:border-primary/30 text-left transition-colors flex items-center justify-between"
-              >
-                <div className="flex items-center space-x-2">
-                  <ShieldCheck className="w-4 h-4 text-primary" strokeWidth={2} />
-                  <div>
-                    <span className="text-xs font-semibold text-navy block">Facility Admin</span>
-                    <span className="text-[11px] text-muted">admin@cryoguard.com</span>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-soft text-primary uppercase">
-                  Admin
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('arun@cryoguard.com', 'Staff@123456')}
-                className="w-full px-3 py-2 rounded-xl border border-border bg-[#F8FAFD] hover:bg-[#E7F8F0] hover:border-emerald-300 text-left transition-colors flex items-center justify-between"
-              >
-                <div className="flex items-center space-x-2">
-                  <UserCheck className="w-4 h-4 text-status-success" strokeWidth={2} />
-                  <div>
-                    <span className="text-xs font-semibold text-navy block">Arun</span>
-                    <span className="text-[11px] text-muted">arun@cryoguard.com</span>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-status-success-bg text-status-success uppercase">
-                  Staff
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('ravi@cryoguard.com', 'Staff@123456')}
-                className="w-full px-3 py-2 rounded-xl border border-border bg-[#F8FAFD] hover:bg-[#E7F8F0] hover:border-emerald-300 text-left transition-colors flex items-center justify-between"
-              >
-                <div className="flex items-center space-x-2">
-                  <UserCheck className="w-4 h-4 text-status-success" strokeWidth={2} />
-                  <div>
-                    <span className="text-xs font-semibold text-navy block">Ravi</span>
-                    <span className="text-[11px] text-muted">ravi@cryoguard.com</span>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-status-success-bg text-status-success uppercase">
-                  Staff
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Footer Note */}

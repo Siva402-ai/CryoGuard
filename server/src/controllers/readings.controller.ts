@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { EquipmentStatus, AlertType, AlertSeverity, AlertStatus } from '@prisma/client';
 import { prisma } from '../db/prisma';
 import { redis } from '../db/redis';
+import { evaluateAllThresholds } from '../services/threshold.service';
 
 const SIMULATOR_API_KEY = process.env.SIMULATOR_API_KEY || 'cryoguard-sim-key-secret-999';
 
@@ -164,53 +165,22 @@ export const ingestReading = async (req: Request, res: Response) => {
     });
 
     // 5. Evaluate Thresholds
-    let tempStatus: EquipmentStatus = EquipmentStatus.NORMAL;
-    let tempMessage = '';
-    if (temperature_c >= equipment.temp_crit_c) {
-      tempStatus = EquipmentStatus.CRITICAL;
-      tempMessage = `${equipment.code} temperature ${temperature_c.toFixed(2)}°C exceeded critical threshold (${equipment.temp_crit_c.toFixed(2)}°C)`;
-    } else if (temperature_c >= equipment.temp_warn_c) {
-      tempStatus = EquipmentStatus.WARNING;
-      tempMessage = `${equipment.code} temperature ${temperature_c.toFixed(2)}°C exceeded warning threshold (${equipment.temp_warn_c.toFixed(2)}°C)`;
-    }
+    const evalResult = evaluateAllThresholds(
+      { temperature_c, pressure_bar, level_pct },
+      equipment,
+      equipment.code,
+    );
 
-    let pressureStatus: EquipmentStatus = EquipmentStatus.NORMAL;
-    let pressureMessage = '';
-    if (pressure_bar >= equipment.pressure_crit_bar) {
-      pressureStatus = EquipmentStatus.CRITICAL;
-      pressureMessage = `${equipment.code} pressure ${pressure_bar.toFixed(2)} bar exceeded critical threshold (${equipment.pressure_crit_bar.toFixed(2)} bar)`;
-    } else if (pressure_bar >= equipment.pressure_warn_bar) {
-      pressureStatus = EquipmentStatus.WARNING;
-      pressureMessage = `${equipment.code} pressure ${pressure_bar.toFixed(2)} bar exceeded warning threshold (${equipment.pressure_warn_bar.toFixed(2)} bar)`;
-    }
+    const tempStatus = evalResult.temp.status;
+    const tempMessage = evalResult.temp.message || '';
 
-    let levelStatus: EquipmentStatus = EquipmentStatus.NORMAL;
-    let levelMessage = '';
-    if (level_pct <= equipment.level_crit_pct) {
-      levelStatus = EquipmentStatus.CRITICAL;
-      levelMessage = `${equipment.code} level ${level_pct.toFixed(2)}% dropped below critical threshold (${equipment.level_crit_pct.toFixed(2)}%)`;
-    } else if (level_pct <= equipment.level_warn_pct) {
-      levelStatus = EquipmentStatus.WARNING;
-      levelMessage = `${equipment.code} level ${level_pct.toFixed(2)}% dropped below warning threshold (${equipment.level_warn_pct.toFixed(2)}%)`;
-    }
+    const pressureStatus = evalResult.pressure.status;
+    const pressureMessage = evalResult.pressure.message || '';
 
-    // Determine overall computedStatus for equipment
-    let computedStatus: EquipmentStatus = EquipmentStatus.NORMAL;
-    if (
-      tempStatus === EquipmentStatus.CRITICAL ||
-      pressureStatus === EquipmentStatus.CRITICAL ||
-      levelStatus === EquipmentStatus.CRITICAL
-    ) {
-      computedStatus = EquipmentStatus.CRITICAL;
-    } else if (
-      tempStatus === EquipmentStatus.WARNING ||
-      pressureStatus === EquipmentStatus.WARNING ||
-      levelStatus === EquipmentStatus.WARNING
-    ) {
-      computedStatus = EquipmentStatus.WARNING;
-    } else {
-      computedStatus = EquipmentStatus.NORMAL;
-    }
+    const levelStatus = evalResult.level.status;
+    const levelMessage = evalResult.level.message || '';
+
+    const computedStatus = evalResult.overall;
 
     // 6. Update Equipment status in DB if changed
     if (equipment.status !== computedStatus) {
