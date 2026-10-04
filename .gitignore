@@ -40,3 +40,9 @@ Thumbs.db
 # Coverage
 coverage/
 *.lcov
+
+# Screenshots, recordings & test artifacts
+docs/screenshots/
+*.webp
+token.txt
+
