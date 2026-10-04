@@ -131,6 +131,7 @@ model SensorReading {
 model Alert {
   id              String        @id @default(uuid())
   equipment_id    String
+  source_id       String?
   type            AlertType
   severity        AlertSeverity
   message         String

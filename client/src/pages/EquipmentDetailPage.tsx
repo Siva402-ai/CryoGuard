@@ -18,7 +18,11 @@ import {
   Droplets,
   Clock,
   ShieldAlert,
+  Wrench,
+  Calendar,
 } from 'lucide-react';
+import { getMaintenanceTasksApi } from '../api/maintenance';
+import { MaintenanceTask } from '../types/maintenance';
 import {
   LineChart,
   Line,
@@ -37,8 +41,10 @@ export const EquipmentDetailPage: React.FC = () => {
 
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [readings, setReadings] = useState<SensorReading[]>([]);
+  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>([]);
   const [loadingEquipment, setLoadingEquipment] = useState(true);
   const [loadingReadings, setLoadingReadings] = useState(true);
+  const [loadingMaintenance, setLoadingMaintenance] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('1h');
 
@@ -47,6 +53,7 @@ export const EquipmentDetailPage: React.FC = () => {
     setError(null);
     setLoadingEquipment(true);
     setLoadingReadings(true);
+    setLoadingMaintenance(true);
 
     try {
       // 1. Fetch Equipment Details
@@ -54,7 +61,17 @@ export const EquipmentDetailPage: React.FC = () => {
       setEquipment(eqData.equipment);
       setLoadingEquipment(false);
 
-      // 2. Fetch Readings based on Time Range
+      // 2. Fetch Maintenance Tasks for this unit
+      try {
+        const maintData = await getMaintenanceTasksApi({ equipmentId: id });
+        setMaintenanceTasks(maintData.tasks || []);
+      } catch (maintErr) {
+        console.error('Failed to load maintenance history for unit:', maintErr);
+      } finally {
+        setLoadingMaintenance(false);
+      }
+
+      // 3. Fetch Readings based on Time Range
       const now = new Date();
       let fromDate: Date;
       if (timeRange === '1h') {
@@ -82,6 +99,7 @@ export const EquipmentDetailPage: React.FC = () => {
     } finally {
       setLoadingEquipment(false);
       setLoadingReadings(false);
+      setLoadingMaintenance(false);
     }
   };
 
@@ -560,6 +578,110 @@ export const EquipmentDetailPage: React.FC = () => {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Maintenance History & Tasks Section */}
+      <div className="bg-surface border border-border rounded-2xl shadow-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded-lg bg-status-info-bg text-status-info flex items-center justify-center">
+              <Wrench className="w-4 h-4" strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-navy">Maintenance History & Upcoming Schedule</h3>
+              <p className="text-xs text-muted">Preventive service records, inspections, and upcoming tasks for this unit</p>
+            </div>
+          </div>
+          <Link
+            to="/maintenance"
+            className="text-xs font-semibold text-primary hover:text-primary-hover inline-flex items-center space-x-1"
+          >
+            <span>All Facility Tasks</span>
+            <Calendar className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {loadingMaintenance ? (
+          <div className="space-y-3 py-4">
+            <div className="h-10 bg-border/40 rounded-xl animate-pulse" />
+            <div className="h-10 bg-border/40 rounded-xl animate-pulse" />
+          </div>
+        ) : maintenanceTasks.length === 0 ? (
+          <div className="py-8 text-center border border-dashed border-border rounded-xl">
+            <Wrench className="w-8 h-8 text-muted mx-auto mb-2 opacity-50" />
+            <p className="text-sm font-semibold text-navy">No Maintenance Records</p>
+            <p className="text-xs text-muted mt-0.5">No upcoming or completed maintenance tasks logged for {equipment.code}.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-6">
+            <table className="w-full text-left text-sm border-collapse min-w-[650px]">
+              <thead>
+                <tr className="bg-[#F8FAFD] border-b border-border text-[11px] font-semibold text-muted uppercase tracking-wider">
+                  <th className="py-3 px-6">Task Title</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Due Date</th>
+                  <th className="py-3 px-4">Assigned To</th>
+                  <th className="py-3 px-4">Recurrence</th>
+                  <th className="py-3 px-6">Completed Date / Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border text-xs">
+                {maintenanceTasks.map((task) => {
+                  const isOverdue = task.status === 'OVERDUE';
+                  const isCompleted = task.status === 'COMPLETED';
+                  const isProgress = task.status === 'IN_PROGRESS' || task.status === 'SCHEDULED';
+
+                  return (
+                    <tr key={task.id} className="hover:bg-[#F8FAFD] transition-colors">
+                      <td className="py-3.5 px-6 font-semibold text-navy">
+                        <div>{task.title}</div>
+                        {task.description && (
+                          <div className="text-[11px] text-muted font-normal line-clamp-1">{task.description}</div>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                            isOverdue
+                              ? 'bg-status-critical-bg text-status-critical'
+                              : isCompleted
+                              ? 'bg-status-success-bg text-status-success'
+                              : isProgress
+                              ? 'bg-status-info-bg text-status-info'
+                              : 'bg-status-neutral-bg text-status-neutral'
+                          }`}
+                        >
+                          {task.status}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-muted whitespace-nowrap font-medium">
+                        {new Date(task.due_date).toLocaleDateString()}
+                      </td>
+                      <td className="py-3.5 px-4 text-navy whitespace-nowrap">
+                        {task.assignee?.name || 'Unassigned'}
+                      </td>
+                      <td className="py-3.5 px-4 text-muted whitespace-nowrap">
+                        {task.recurrence_days ? `Every ${task.recurrence_days} days` : 'One-off'}
+                      </td>
+                      <td className="py-3.5 px-6 text-muted">
+                        {isCompleted ? (
+                          <div>
+                            <span className="text-status-success font-semibold">
+                              Done {task.completed_at ? new Date(task.completed_at).toLocaleDateString() : ''}
+                            </span>
+                            {task.notes && <div className="text-[11px] text-navy italic mt-0.5">"{task.notes}"</div>}
+                          </div>
+                        ) : (
+                          <span className="text-muted italic">Pending completion</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

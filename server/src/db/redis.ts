@@ -17,6 +17,16 @@ const redisOptions = {
 export const redis = new Redis(redisUrl, redisOptions);
 export const redisSub = new Redis(redisUrl, redisOptions);
 
+// Dedicated connection for BullMQ with maxRetriesPerRequest: null
+export const redisQueueConnection = new Redis(redisUrl, {
+  maxRetriesPerRequest: null,
+  retryStrategy(times: number) {
+    const delay = Math.min(times * 200, 2000);
+    return delay;
+  },
+  lazyConnect: true,
+});
+
 redis.on('error', (err) => {
   console.error('Redis primary error:', err.message);
 });
@@ -31,4 +41,12 @@ redisSub.on('error', (err) => {
 
 redisSub.on('connect', () => {
   console.log('✅ Connected to Redis (Subscriber)');
+});
+
+redisQueueConnection.on('error', (err) => {
+  console.error('Redis Queue connection error:', err.message);
+});
+
+redisQueueConnection.on('connect', () => {
+  console.log('✅ Connected to Redis (Queue)');
 });

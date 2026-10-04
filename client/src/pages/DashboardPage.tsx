@@ -423,10 +423,30 @@ export const DashboardPage: React.FC = () => {
                         {alert.message}
                       </p>
 
+                      {alert.type === 'MAINTENANCE' && (
+                        <div className="mt-1">
+                          <Link
+                            to="/maintenance"
+                            className="text-[11px] font-semibold text-primary hover:underline inline-flex items-center space-x-1"
+                          >
+                            <span>Open Maintenance Schedule &rarr;</span>
+                          </Link>
+                        </div>
+                      )}
+
                       <div className="mt-2 flex items-center justify-between text-[11px] text-muted">
-                        <span className="font-semibold uppercase tracking-wider text-[10px]">
-                          {alert.type}
-                        </span>
+                        {alert.type === 'MAINTENANCE' ? (
+                          <Link
+                            to="/maintenance"
+                            className="font-semibold uppercase tracking-wider text-[10px] text-status-info hover:underline"
+                          >
+                            MAINTENANCE
+                          </Link>
+                        ) : (
+                          <span className="font-semibold uppercase tracking-wider text-[10px]">
+                            {alert.type}
+                          </span>
+                        )}
                         <span
                           className={`font-semibold ${
                             isRes

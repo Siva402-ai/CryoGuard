@@ -9,9 +9,9 @@ import { EquipmentListPage } from './pages/EquipmentListPage';
 import { EquipmentDetailPage } from './pages/EquipmentDetailPage';
 import { UsersPage } from './pages/UsersPage';
 import { AlertsPage } from './pages/AlertsPage';
+import { MaintenancePage } from './pages/MaintenancePage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import {
-  Wrench,
   ClipboardCheck,
   Package,
   BarChart3,
@@ -32,17 +32,7 @@ export default function App() {
               <Route path="/equipment" element={<EquipmentListPage />} />
               <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
-              <Route
-                path="/maintenance"
-                element={
-                  <PlaceholderPage
-                    title="Maintenance Schedules"
-                    subtitle="Preventive maintenance tasks, recurrence schedules, and technician assignments"
-                    phase="Phase 4"
-                    icon={Wrench}
-                  />
-                }
-              />
+              <Route path="/maintenance" element={<MaintenancePage />} />
               <Route
                 path="/inspections"
                 element={

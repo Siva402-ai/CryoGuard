@@ -6,6 +6,7 @@ import { equipmentRouter } from './equipment.routes';
 import { readingsRouter } from './readings.routes';
 import { alertRouter } from './alert.routes';
 import { dashboardRouter } from './dashboard.routes';
+import { maintenanceRouter } from './maintenance.routes';
 
 export const apiRouter = Router();
 
@@ -16,3 +17,4 @@ apiRouter.use('/equipment', equipmentRouter);
 apiRouter.use('/readings', readingsRouter);
 apiRouter.use('/alerts', alertRouter);
 apiRouter.use('/dashboard', dashboardRouter);
+apiRouter.use('/maintenance', maintenanceRouter);

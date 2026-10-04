@@ -5,7 +5,8 @@ import dotenv from 'dotenv';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { apiRouter } from './routes';
-import { redis } from './db/redis';
+import { redis, redisSub } from './db/redis';
+import { initBackgroundJobs, systemWorker, systemQueue } from './jobs';
 
 dotenv.config();
 
@@ -53,9 +54,16 @@ redis.connect().catch((err) => {
   logger.warn(`Redis initial connection notice: ${err.message}`);
 });
 
-const server = app.listen(port, '0.0.0.0', () => {
+const server = app.listen(port, '0.0.0.0', async () => {
   logger.info(`🚀 CryoGuard Server running on port ${port} in ${process.env.NODE_ENV || 'development'} mode`);
   logger.info(`🔗 Health check available at http://localhost:${port}/api/health`);
+
+  // Initialize BullMQ background workers and jobs
+  try {
+    await initBackgroundJobs();
+  } catch (err: any) {
+    logger.error(`Failed to initialize background jobs: ${err.message}`);
+  }
 });
 
 // Graceful shutdown
@@ -65,8 +73,11 @@ const handleShutdown = async (signal: string) => {
     logger.info('HTTP server closed');
   });
   try {
+    await systemWorker.close();
+    await systemQueue.close();
     await redis.quit();
-    logger.info('Redis connection closed');
+    await redisSub.quit();
+    logger.info('Redis and BullMQ connections closed');
   } catch (err) {
     // ignore
   }

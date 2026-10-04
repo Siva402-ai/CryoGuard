@@ -73,10 +73,15 @@ export const getDashboardSummary = async (_req: Request, res: Response) => {
       }),
     ]);
 
-    // 4. Maintenance tasks due/overdue count (from real table, 0 until Phase 4)
+    // 4. Maintenance tasks due/overdue count (overdue or due within 7 days)
+    const in7Days = new Date();
+    in7Days.setDate(in7Days.getDate() + 7);
+    in7Days.setHours(23, 59, 59, 999);
+
     const maintenanceDue = await prisma.maintenanceTask.count({
       where: {
-        status: { in: [MaintenanceStatus.PENDING, MaintenanceStatus.SCHEDULED, MaintenanceStatus.OVERDUE] },
+        status: { not: MaintenanceStatus.COMPLETED },
+        due_date: { lte: in7Days },
       },
     });
 

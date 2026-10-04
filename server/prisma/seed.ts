@@ -1,4 +1,4 @@
-import { PrismaClient, Role, MaterialType, EquipmentStatus } from '@prisma/client';
+import { PrismaClient, Role, MaterialType, EquipmentStatus, MaintenanceStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
@@ -254,6 +254,78 @@ async function main() {
     });
   }
   console.log('✅ Seeded inspection template');
+
+  // 5. Seed Demo Maintenance Tasks
+  const tank1 = await prisma.equipment.findUnique({ where: { code: 'C-001' } });
+  const tank2 = await prisma.equipment.findUnique({ where: { code: 'C-002' } });
+  const tank3 = await prisma.equipment.findUnique({ where: { code: 'C-003' } });
+  const tank5 = await prisma.equipment.findUnique({ where: { code: 'C-005' } });
+
+  const staffArun = await prisma.user.findUnique({ where: { email: 'arun@cryoguard.com' } });
+  const staffRavi = await prisma.user.findUnique({ where: { email: 'ravi@cryoguard.com' } });
+
+  if (tank1 && tank2 && tank3 && tank5) {
+    const maintenanceSeedTasks = [
+      {
+        equipment_id: tank1.id,
+        title: 'Annual Flange Seal & Gasket Replacement',
+        description: 'Complete inspection of inlet/outlet flange seals, replaced DN50 cryogenic gaskets.',
+        due_date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+        status: MaintenanceStatus.COMPLETED,
+        assigned_to: staffArun?.name || 'Arun',
+        completed_at: new Date(Date.now() - 34 * 24 * 60 * 60 * 1000),
+        notes: 'Replaced valve gasket and recalibrated pressure gauge. All nominal.',
+      },
+      {
+        equipment_id: tank2.id,
+        title: 'Vacuum Jacket Inspection & Boil-off Rate Check',
+        description: 'Verify vacuum integrity and inspect outer vessel for cold spots or sweat patches.',
+        due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        status: MaintenanceStatus.PENDING,
+        assigned_to: staffArun?.name || 'Arun',
+        recurrence_days: null,
+      },
+      {
+        equipment_id: tank3.id,
+        title: 'Monthly Cryo Relief Valve Pressure Test',
+        description: 'Verify dual safety relief valve actuation setpoint at 2.2 bar.',
+        due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        status: MaintenanceStatus.PENDING,
+        assigned_to: staffRavi?.name || 'Ravi',
+        recurrence_days: 30,
+      },
+      {
+        equipment_id: tank5.id,
+        title: 'Quarterly Telemetry Sensor Calibration & Transducer Check',
+        description: 'Zero-point calibration for 4-20mA pressure and temperature transmitters.',
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        status: MaintenanceStatus.PENDING,
+        assigned_to: staffArun?.name || 'Arun',
+        recurrence_days: 90,
+      },
+    ];
+
+    for (const task of maintenanceSeedTasks) {
+      const existingTask = await prisma.maintenanceTask.findFirst({
+        where: {
+          equipment_id: task.equipment_id,
+          title: task.title,
+        },
+      });
+
+      if (existingTask) {
+        await prisma.maintenanceTask.update({
+          where: { id: existingTask.id },
+          data: task,
+        });
+      } else {
+        await prisma.maintenanceTask.create({
+          data: task,
+        });
+      }
+    }
+    console.log(`✅ Seeded ${maintenanceSeedTasks.length} maintenance tasks`);
+  }
 
   console.log('🎉 Seeding completed successfully!');
 }

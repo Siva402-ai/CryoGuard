@@ -56,7 +56,7 @@ cryoguard/
 | `users` | id, name, email (unique), password_hash, role (`ADMIN`, `STAFF`; default `STAFF`), is_active, created_at. Many users allowed, each has exactly one role |
 | `equipment` | id, code (unique, e.g. C-001), name, material (`LN2`, `LOX`, `ARGON`), capacity_l, location, temp_warn_c, temp_crit_c, pressure_warn_bar, pressure_crit_bar, level_warn_pct, level_crit_pct, status (`NORMAL`, `WARNING`, `CRITICAL`, `OFFLINE`), created_at |
 | `sensor_readings` | id, equipment_id, temperature_c, pressure_bar, level_pct, recorded_at. Index on (equipment_id, recorded_at DESC) |
-| `alerts` | id, equipment_id, type (`TEMPERATURE`, `PRESSURE`, `LEVEL`, `MAINTENANCE`, `INSPECTION`, `INVENTORY`), severity (`WARNING`, `CRITICAL`), message, value, status (`OPEN`, `ACKNOWLEDGED`, `RESOLVED`), acknowledged_by, acknowledged_at, resolved_by, resolved_at, created_at |
+| `alerts` | id, equipment_id, source_id (nullable, e.g. maintenance task id), type (`TEMPERATURE`, `PRESSURE`, `LEVEL`, `MAINTENANCE`, `INSPECTION`, `INVENTORY`), severity (`WARNING`, `CRITICAL`), message, value, status (`OPEN`, `ACKNOWLEDGED`, `RESOLVED`), acknowledged_by, acknowledged_at, resolved_by, resolved_at, created_at |
 | `maintenance_tasks` | id, equipment_id, title, description, due_date, assigned_to, status (`PENDING`, `SCHEDULED`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE`), recurrence_days (nullable), completed_at, notes |
 | `inspection_templates` | id, name, items (jsonb list of checklist labels) |
 | `inspections` | id, equipment_id, template_id, inspector_id (the user who performed it, any role), performed_at, results (jsonb: item -> pass/fail), overall (`PASS`, `NEEDS_ATTENTION`, `FAIL`), findings, corrective_action |
@@ -113,8 +113,9 @@ Level: warning below 30%, critical below 15%. Pressure: warning above 1.8 bar, c
 - `GET /reports/temperature-trend`, `/reports/alerts-by-month`, `/reports/maintenance-history`, `/reports/inventory-consumption`
 - Each supports `?format=csv`
 
-**Users (`ADMIN` only; `STAFF` gets 403)**
-- `GET /users`, `POST /users`, `PUT /users/:id`, `PATCH /users/:id/deactivate`
+**Users**
+- `GET /users/options` (all authenticated users: active user id and name for task assignments)
+- `GET /users`, `POST /users`, `PUT /users/:id`, `PATCH /users/:id/deactivate` (`ADMIN` only; `STAFF` gets 403)
 
 ### Roles & permissions
 

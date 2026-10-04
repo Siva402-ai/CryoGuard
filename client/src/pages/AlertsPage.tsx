@@ -274,14 +274,31 @@ export const AlertsPage: React.FC = () => {
 
                       {/* Type */}
                       <td className="py-4 px-4">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold uppercase bg-primary-soft text-primary">
-                          {alert.type}
-                        </span>
+                        {alert.type === 'MAINTENANCE' ? (
+                          <Link
+                            to="/maintenance"
+                            className="px-2 py-0.5 rounded text-[11px] font-bold uppercase bg-status-info-bg text-status-info hover:underline inline-flex items-center"
+                          >
+                            MAINTENANCE
+                          </Link>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold uppercase bg-primary-soft text-primary">
+                            {alert.type}
+                          </span>
+                        )}
                       </td>
 
                       {/* Message */}
                       <td className="py-4 px-4 text-text font-medium max-w-xs">
-                        {alert.message}
+                        <div>{alert.message}</div>
+                        {alert.type === 'MAINTENANCE' && (
+                          <Link
+                            to="/maintenance"
+                            className="text-xs text-primary font-semibold hover:underline inline-flex items-center space-x-1 mt-0.5"
+                          >
+                            <span>View Task in Schedule &rarr;</span>
+                          </Link>
+                        )}
                       </td>
 
                       {/* Value */}
