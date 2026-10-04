@@ -9,7 +9,6 @@ import {
   UserX,
   Eye,
   EyeOff,
-  Sparkles,
   KeyRound,
   Filter,
   ChevronRight,
@@ -34,26 +33,26 @@ type ActiveTab = 'users' | 'audit';
 
 // Human-readable labels and badge styles for audit log actions
 const ACTION_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  CREATE_USER: { label: 'User Created', color: '#1A2BC3', bg: '#EEF1FF' },
-  UPDATE_USER: { label: 'User Updated', color: '#4AA8B5', bg: '#EBF7F9' },
-  DEACTIVATE_USER: { label: 'User Deactivated', color: '#D92D20', bg: '#FDECEA' },
-  REACTIVATE_USER: { label: 'User Reactivated', color: '#0E9F6E', bg: '#E7F8F0' },
-  RESET_USER_PASSWORD: { label: 'Password Reset', color: '#C77700', bg: '#FFF4DE' },
-  CREATE_EQUIPMENT: { label: 'Equipment Added', color: '#1A2BC3', bg: '#EEF1FF' },
-  UPDATE_EQUIPMENT: { label: 'Equipment Updated', color: '#4AA8B5', bg: '#EBF7F9' },
-  DELETE_EQUIPMENT: { label: 'Equipment Removed', color: '#D92D20', bg: '#FDECEA' },
-  ACKNOWLEDGE_ALERT: { label: 'Alert Acknowledged', color: '#C77700', bg: '#FFF4DE' },
-  RESOLVE_ALERT: { label: 'Alert Resolved', color: '#0E9F6E', bg: '#E7F8F0' },
-  CREATE_MAINTENANCE: { label: 'Maintenance Created', color: '#1A2BC3', bg: '#EEF1FF' },
-  UPDATE_MAINTENANCE: { label: 'Maintenance Updated', color: '#4AA8B5', bg: '#EBF7F9' },
-  COMPLETE_MAINTENANCE: { label: 'Maintenance Completed', color: '#0E9F6E', bg: '#E7F8F0' },
-  CREATE_INSPECTION_TEMPLATE: { label: 'Template Created', color: '#1A2BC3', bg: '#EEF1FF' },
-  CREATE_INSPECTION: { label: 'Inspection Recorded', color: '#0E9F6E', bg: '#E7F8F0' },
-  CREATE_INVENTORY_ITEM: { label: 'Item Registered', color: '#1A2BC3', bg: '#EEF1FF' },
-  UPDATE_INVENTORY_ITEM: { label: 'Item Updated', color: '#4AA8B5', bg: '#EBF7F9' },
-  CREATE_TRANSACTION: { label: 'Inventory Transaction', color: '#6B7BE8', bg: '#F0F2FD' },
-  CREATE_RESTOCK_REQUEST: { label: 'Restock Requested', color: '#C77700', bg: '#FFF4DE' },
-  UPDATE_RESTOCK_REQUEST: { label: 'Restock Updated', color: '#4AA8B5', bg: '#EBF7F9' },
+  CREATE_USER: { label: 'User created', color: '#1A2BC3', bg: '#EEF1FF' },
+  UPDATE_USER: { label: 'User updated', color: '#4AA8B5', bg: '#EBF7F9' },
+  DEACTIVATE_USER: { label: 'User deactivated', color: '#D92D20', bg: '#FDECEA' },
+  REACTIVATE_USER: { label: 'User reactivated', color: '#0E9F6E', bg: '#E7F8F0' },
+  RESET_USER_PASSWORD: { label: 'Password reset', color: '#C77700', bg: '#FFF4DE' },
+  CREATE_EQUIPMENT: { label: 'Equipment added', color: '#1A2BC3', bg: '#EEF1FF' },
+  UPDATE_EQUIPMENT: { label: 'Equipment updated', color: '#4AA8B5', bg: '#EBF7F9' },
+  DELETE_EQUIPMENT: { label: 'Equipment removed', color: '#D92D20', bg: '#FDECEA' },
+  ACKNOWLEDGE_ALERT: { label: 'Alert acknowledged', color: '#C77700', bg: '#FFF4DE' },
+  RESOLVE_ALERT: { label: 'Alert resolved', color: '#0E9F6E', bg: '#E7F8F0' },
+  CREATE_MAINTENANCE: { label: 'Maintenance created', color: '#1A2BC3', bg: '#EEF1FF' },
+  UPDATE_MAINTENANCE: { label: 'Maintenance updated', color: '#4AA8B5', bg: '#EBF7F9' },
+  COMPLETE_MAINTENANCE: { label: 'Maintenance completed', color: '#0E9F6E', bg: '#E7F8F0' },
+  CREATE_INSPECTION_TEMPLATE: { label: 'Template created', color: '#1A2BC3', bg: '#EEF1FF' },
+  CREATE_INSPECTION: { label: 'Inspection recorded', color: '#0E9F6E', bg: '#E7F8F0' },
+  CREATE_INVENTORY_ITEM: { label: 'Item registered', color: '#1A2BC3', bg: '#EEF1FF' },
+  UPDATE_INVENTORY_ITEM: { label: 'Item updated', color: '#4AA8B5', bg: '#EBF7F9' },
+  CREATE_TRANSACTION: { label: 'Inventory transaction', color: '#6B7BE8', bg: '#F0F2FD' },
+  CREATE_RESTOCK_REQUEST: { label: 'Restock requested', color: '#C77700', bg: '#FFF4DE' },
+  UPDATE_RESTOCK_REQUEST: { label: 'Restock updated', color: '#4AA8B5', bg: '#EBF7F9' },
 };
 
 function generateStrongPassword(): string {
@@ -271,44 +270,51 @@ export const UsersPage: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Page Header */}
-      <div className="bg-white border border-[#E5E9F2] rounded-2xl shadow-[0_1px_2px_rgba(11,22,51,0.04),0_8px_24px_rgba(11,22,51,0.04)] p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Section 10 Clean Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2 text-xs font-semibold text-[#1A2BC3] mb-1 uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4" />
-            <span>Administrator Access Area</span>
-          </div>
-          <h1 className="text-2xl font-bold text-[#0B1633] tracking-tight">Users & Roles Management</h1>
-          <p className="text-xs sm:text-sm text-[#5B6578] mt-1">
-            Manage authorized staff accounts, configure role permissions, and review system audit compliance logs.
+          <h1 className="text-2xl font-bold text-[#0B1633] tracking-tight">Users & roles</h1>
+          <p className="text-sm text-[#5B6578] mt-1">
+            Manage authorized staff accounts, role permissions, and system compliance logs.
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center bg-[#F6F8FC] p-1 rounded-full border border-[#E5E9F2] self-start md:self-auto">
+        {activeTab === 'users' && (
           <button
-            id="tab-users-btn"
-            onClick={() => setActiveTab('users')}
-            className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${
-              activeTab === 'users'
-                ? 'bg-[#1A2BC3] text-white shadow-sm'
-                : 'text-[#5B6578] hover:text-[#1F2A44]'
-            }`}
+            id="add-user-btn"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold bg-[#1A2BC3] hover:bg-[#142299] text-white shadow-sm transition-colors self-start sm:self-auto"
           >
-            Users & Roles ({users.length})
+            <UserPlus className="w-4 h-4" />
+            <span>Add user</span>
           </button>
-          <button
-            id="tab-audit-btn"
-            onClick={() => setActiveTab('audit')}
-            className={`px-5 py-2 rounded-full text-xs font-semibold transition-all ${
-              activeTab === 'audit'
-                ? 'bg-[#1A2BC3] text-white shadow-sm'
-                : 'text-[#5B6578] hover:text-[#1F2A44]'
-            }`}
-          >
-            Audit Log
-          </button>
-        </div>
+        )}
+      </div>
+
+      {/* Tabs Switcher: Users | Audit log (No Count) */}
+      <div className="flex items-center gap-2 border-b border-[#E5E9F2] pb-px">
+        <button
+          id="tab-users-btn"
+          onClick={() => setActiveTab('users')}
+          className={`px-4 py-2 text-xs font-semibold border-b-2 transition-all ${
+            activeTab === 'users'
+              ? 'border-[#1A2BC3] text-[#1A2BC3]'
+              : 'border-transparent text-[#5B6578] hover:text-[#0B1633]'
+          }`}
+        >
+          Users
+        </button>
+        <button
+          id="tab-audit-btn"
+          onClick={() => setActiveTab('audit')}
+          className={`px-4 py-2 text-xs font-semibold border-b-2 transition-all ${
+            activeTab === 'audit'
+              ? 'border-[#1A2BC3] text-[#1A2BC3]'
+              : 'border-transparent text-[#5B6578] hover:text-[#0B1633]'
+          }`}
+        >
+          Audit log
+        </button>
       </div>
 
       {/* ============================================================ */}
@@ -316,22 +322,6 @@ export const UsersPage: React.FC = () => {
       {/* ============================================================ */}
       {activeTab === 'users' && (
         <div className="space-y-6">
-          {/* Top Bar with Add User button */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-[#0B1633]">System Staff & Administrators</h2>
-              <p className="text-xs text-[#5B6578]">Active and deactivated user accounts with system credentials</p>
-            </div>
-            <button
-              id="add-user-btn"
-              onClick={handleOpenAddModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold bg-[#1A2BC3] hover:bg-[#142299] text-white shadow-sm transition-colors"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Add User</span>
-            </button>
-          </div>
-
           {/* Users Table Card */}
           <div className="bg-white border border-[#E5E9F2] rounded-2xl shadow-[0_1px_2px_rgba(11,22,51,0.04),0_8px_24px_rgba(11,22,51,0.04)] overflow-hidden">
             {loadingUsers ? (
@@ -360,13 +350,13 @@ export const UsersPage: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-[#F6F8FC] border-b border-[#E5E9F2] text-[#5B6578]">
-                      <th className="py-3.5 px-6 font-semibold uppercase tracking-wider">Staff Member</th>
-                      <th className="py-3.5 px-6 font-semibold uppercase tracking-wider">Email Address</th>
-                      <th className="py-3.5 px-6 font-semibold uppercase tracking-wider">Assigned Role</th>
-                      <th className="py-3.5 px-6 font-semibold uppercase tracking-wider">Account Status</th>
-                      <th className="py-3.5 px-6 font-semibold uppercase tracking-wider">Registered Date</th>
-                      <th className="py-3.5 px-6 font-semibold uppercase tracking-wider text-right">Actions</th>
+                    <tr className="bg-[#F6F8FC] border-b border-[#E5E9F2] text-[#5B6578] h-11">
+                      <th className="px-6 font-semibold uppercase tracking-wider">Staff member</th>
+                      <th className="px-6 font-semibold uppercase tracking-wider">Email address</th>
+                      <th className="px-6 font-semibold uppercase tracking-wider">Role</th>
+                      <th className="px-6 font-semibold uppercase tracking-wider">Status</th>
+                      <th className="px-6 font-semibold uppercase tracking-wider">Created</th>
+                      <th className="px-6 font-semibold uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E5E9F2]">
@@ -380,9 +370,9 @@ export const UsersPage: React.FC = () => {
                         .slice(0, 2);
 
                       return (
-                        <tr key={u.id} className="hover:bg-[#F6F8FC] transition-colors">
+                        <tr key={u.id} className="h-14 hover:bg-[#F6F8FC] transition-colors">
                           {/* Member Info */}
-                          <td className="py-3.5 px-6 whitespace-nowrap">
+                          <td className="px-6 whitespace-nowrap">
                             <div className="flex items-center space-x-3">
                               <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
@@ -393,24 +383,22 @@ export const UsersPage: React.FC = () => {
                               >
                                 {initials}
                               </div>
-                              <div>
-                                <div className="font-semibold text-[#0B1633] flex items-center gap-1.5">
-                                  <span>{u.name}</span>
-                                  {isSelf && (
-                                    <span className="text-[10px] bg-[#EEF1FF] text-[#1A2BC3] px-1.5 py-0.2 rounded font-medium">
-                                      You
-                                    </span>
-                                  )}
-                                </div>
+                              <div className="font-semibold text-[#0B1633] flex items-center gap-1.5">
+                                <span>{u.name}</span>
+                                {isSelf && (
+                                  <span className="text-[10px] bg-[#EEF1FF] text-[#1A2BC3] px-1.5 py-0.5 rounded font-medium">
+                                    You
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </td>
 
-                          {/* Email */}
-                          <td className="py-3.5 px-6 text-[#5B6578] font-mono">{u.email}</td>
+                          {/* Email - Normal Font */}
+                          <td className="px-6 text-[#5B6578]">{u.email}</td>
 
                           {/* Role Badge */}
-                          <td className="py-3.5 px-6 whitespace-nowrap">
+                          <td className="px-6 whitespace-nowrap">
                             <span
                               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
                                 u.role === 'ADMIN'
@@ -428,7 +416,7 @@ export const UsersPage: React.FC = () => {
                           </td>
 
                           {/* Status Badge */}
-                          <td className="py-3.5 px-6 whitespace-nowrap">
+                          <td className="px-6 whitespace-nowrap">
                             <span
                               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
                                 u.is_active
@@ -445,13 +433,13 @@ export const UsersPage: React.FC = () => {
                             </span>
                           </td>
 
-                          {/* Created Date */}
-                          <td className="py-3.5 px-6 text-[#5B6578] whitespace-nowrap">
+                          {/* Created Date - Normal Font */}
+                          <td className="px-6 text-[#5B6578] whitespace-nowrap">
                             {u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}
                           </td>
 
                           {/* Actions */}
-                          <td className="py-3.5 px-6 text-right whitespace-nowrap">
+                          <td className="px-6 text-right whitespace-nowrap">
                             <div className="inline-flex items-center gap-2">
                               {/* Edit Button */}
                               <button
@@ -466,7 +454,7 @@ export const UsersPage: React.FC = () => {
                               {isSelf ? (
                                 <div
                                   className="p-1.5 rounded-lg border border-[#E5E9F2] bg-[#F6F8FC] text-[#94A3B8] cursor-not-allowed opacity-60"
-                                  title="You cannot deactivate or demote your own account"
+                                  title="You cannot deactivate your own account"
                                 >
                                   <Lock className="w-3.5 h-3.5" />
                                 </div>
@@ -506,26 +494,26 @@ export const UsersPage: React.FC = () => {
             <div className="flex items-center justify-between pb-2 border-b border-[#E5E9F2]">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#0B1633] uppercase tracking-wider">
                 <Filter className="w-3.5 h-3.5 text-[#1A2BC3]" />
-                <span>Filter Audit Log Records</span>
+                <span>Filter audit log</span>
               </div>
               <button
                 onClick={handleResetFilters}
                 className="text-xs text-[#1A2BC3] hover:underline font-medium"
               >
-                Reset Filters
+                Reset filters
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
               {/* User filter */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#5B6578] mb-1">Actor User</label>
+                <label className="block text-[11px] font-semibold text-[#5B6578] mb-1">Actor user</label>
                 <select
                   value={filterUserId}
                   onChange={(e) => setFilterUserId(e.target.value)}
                   className="w-full text-xs bg-[#F6F8FC] border border-[#E5E9F2] rounded-lg px-2.5 py-1.5 text-[#1F2A44] focus:outline-none focus:ring-1 focus:ring-[#1A2BC3]"
                 >
-                  <option value="">All Users</option>
+                  <option value="">All users</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name} ({u.role})
@@ -536,13 +524,13 @@ export const UsersPage: React.FC = () => {
 
               {/* Entity filter */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#5B6578] mb-1">Entity Type</label>
+                <label className="block text-[11px] font-semibold text-[#5B6578] mb-1">Entity type</label>
                 <select
                   value={filterEntity}
                   onChange={(e) => setFilterEntity(e.target.value)}
                   className="w-full text-xs bg-[#F6F8FC] border border-[#E5E9F2] rounded-lg px-2.5 py-1.5 text-[#1F2A44] focus:outline-none focus:ring-1 focus:ring-[#1A2BC3]"
                 >
-                  <option value="">All Entities</option>
+                  <option value="">All entities</option>
                   <option value="User">User</option>
                   <option value="Equipment">Equipment</option>
                   <option value="Alert">Alert</option>
@@ -563,7 +551,7 @@ export const UsersPage: React.FC = () => {
                   onChange={(e) => setFilterAction(e.target.value)}
                   className="w-full text-xs bg-[#F6F8FC] border border-[#E5E9F2] rounded-lg px-2.5 py-1.5 text-[#1F2A44] focus:outline-none focus:ring-1 focus:ring-[#1A2BC3]"
                 >
-                  <option value="">All Actions</option>
+                  <option value="">All actions</option>
                   <option value="CREATE_USER">CREATE_USER</option>
                   <option value="UPDATE_USER">UPDATE_USER</option>
                   <option value="DEACTIVATE_USER">DEACTIVATE_USER</option>
@@ -588,7 +576,7 @@ export const UsersPage: React.FC = () => {
 
               {/* Date from */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#5B6578] mb-1">From Date</label>
+                <label className="block text-[11px] font-semibold text-[#5B6578] mb-1">From date</label>
                 <input
                   type="date"
                   value={filterFrom}
@@ -599,7 +587,7 @@ export const UsersPage: React.FC = () => {
 
               {/* Date to */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#5B6578] mb-1">To Date</label>
+                <label className="block text-[11px] font-semibold text-[#5B6578] mb-1">To date</label>
                 <input
                   type="date"
                   value={filterTo}
@@ -640,13 +628,13 @@ export const UsersPage: React.FC = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-[#F6F8FC] border-b border-[#E5E9F2] text-[#5B6578]">
-                        <th className="py-3 px-4 w-8"></th>
-                        <th className="py-3 px-4 font-semibold uppercase tracking-wider">Timestamp</th>
-                        <th className="py-3 px-4 font-semibold uppercase tracking-wider">Actor User</th>
-                        <th className="py-3 px-4 font-semibold uppercase tracking-wider">Action Performed</th>
-                        <th className="py-3 px-4 font-semibold uppercase tracking-wider">Target Entity</th>
-                        <th className="py-3 px-4 font-semibold uppercase tracking-wider">Entity ID</th>
+                      <tr className="bg-[#F6F8FC] border-b border-[#E5E9F2] text-[#5B6578] h-11">
+                        <th className="px-4 w-8"></th>
+                        <th className="px-4 font-semibold uppercase tracking-wider">Timestamp</th>
+                        <th className="px-4 font-semibold uppercase tracking-wider">Actor user</th>
+                        <th className="px-4 font-semibold uppercase tracking-wider">Action performed</th>
+                        <th className="px-4 font-semibold uppercase tracking-wider">Target entity</th>
+                        <th className="px-4 font-semibold uppercase tracking-wider">Entity ID</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E5E9F2]">
@@ -662,28 +650,29 @@ export const UsersPage: React.FC = () => {
                           <React.Fragment key={log.id}>
                             <tr
                               onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                              className={`cursor-pointer transition-colors ${
+                              className={`h-14 cursor-pointer transition-colors ${
                                 isExpanded ? 'bg-[#EEF1FF]/30' : 'hover:bg-[#F6F8FC]'
                               }`}
                             >
-                              <td className="py-3 px-4 text-center">
+                              <td className="px-4 text-center">
                                 {isExpanded ? (
                                   <ChevronDown className="w-3.5 h-3.5 text-[#1A2BC3]" />
                                 ) : (
                                   <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8]" />
                                 )}
                               </td>
-                              <td className="py-3 px-4 whitespace-nowrap text-[#5B6578] font-mono">
+                              {/* Timestamp - Normal font */}
+                              <td className="px-4 whitespace-nowrap text-[#5B6578]">
                                 {new Date(log.created_at).toLocaleString()}
                               </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
+                              <td className="px-4 whitespace-nowrap">
                                 {log.user ? (
                                   <span className="font-medium text-[#0B1633]">{log.user.name}</span>
                                 ) : (
                                   <span className="text-[#94A3B8] italic">System</span>
                                 )}
                               </td>
-                              <td className="py-3 px-4 whitespace-nowrap">
+                              <td className="px-4 whitespace-nowrap">
                                 <span
                                   className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border"
                                   style={{
@@ -695,10 +684,11 @@ export const UsersPage: React.FC = () => {
                                   {actionMeta.label}
                                 </span>
                               </td>
-                              <td className="py-3 px-4 whitespace-nowrap font-medium text-[#1F2A44]">
+                              <td className="px-4 whitespace-nowrap font-medium text-[#1F2A44]">
                                 {log.entity}
                               </td>
-                              <td className="py-3 px-4 whitespace-nowrap text-[#5B6578] font-mono text-[11px]">
+                              {/* Entity ID - Monospace */}
+                              <td className="px-4 whitespace-nowrap text-[#5B6578] font-mono text-[11px]">
                                 {log.entity_id}
                               </td>
                             </tr>
@@ -710,7 +700,7 @@ export const UsersPage: React.FC = () => {
                                   <div className="bg-white p-4 rounded-xl border border-[#E5E9F2] shadow-sm space-y-2">
                                     <div className="flex items-center justify-between border-b border-[#E5E9F2] pb-2">
                                       <span className="text-xs font-bold text-[#0B1633]">
-                                        Audit Payload Metadata
+                                        Audit payload metadata
                                       </span>
                                       <span className="text-[10px] text-[#5B6578] font-mono">ID: {log.id}</span>
                                     </div>
@@ -783,7 +773,7 @@ export const UsersPage: React.FC = () => {
                   <UserPlus className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#0B1633]">Register New Staff Member</h3>
+                  <h3 className="text-base font-bold text-[#0B1633]">Register new staff member</h3>
                   <p className="text-xs text-[#5B6578]">Create an authorized user credential</p>
                 </div>
               </div>
@@ -805,7 +795,7 @@ export const UsersPage: React.FC = () => {
             <form onSubmit={handleCreateUser} className="space-y-4 text-xs">
               {/* Name */}
               <div>
-                <label className="block font-semibold text-[#0B1633] mb-1">Full Name</label>
+                <label className="block font-semibold text-[#0B1633] mb-1">Full name</label>
                 <input
                   type="text"
                   required
@@ -818,7 +808,7 @@ export const UsersPage: React.FC = () => {
 
               {/* Email */}
               <div>
-                <label className="block font-semibold text-[#0B1633] mb-1">Email Address</label>
+                <label className="block font-semibold text-[#0B1633] mb-1">Email address</label>
                 <input
                   type="email"
                   required
@@ -831,7 +821,7 @@ export const UsersPage: React.FC = () => {
 
               {/* Role Select with descriptions */}
               <div>
-                <label className="block font-semibold text-[#0B1633] mb-1">Role Permissions</label>
+                <label className="block font-semibold text-[#0B1633] mb-1">Role permissions</label>
                 <div className="grid grid-cols-2 gap-3">
                   <div
                     onClick={() => setFormData({ ...formData, role: 'STAFF' })}
@@ -872,13 +862,13 @@ export const UsersPage: React.FC = () => {
               {/* Password with generator */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="font-semibold text-[#0B1633]">Temporary Password</label>
+                  <label className="font-semibold text-[#0B1633]">Temporary password</label>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, password: generateStrongPassword() })}
                     className="inline-flex items-center gap-1 text-[11px] text-[#1A2BC3] hover:underline font-semibold"
                   >
-                    <Sparkles className="w-3 h-3" />
+                    <KeyRound className="w-3.5 h-3.5" />
                     <span>Generate</span>
                   </button>
                 </div>
@@ -922,7 +912,7 @@ export const UsersPage: React.FC = () => {
                   ) : (
                     <UserPlus className="w-4 h-4" />
                   )}
-                  <span>Create Account</span>
+                  <span>Create account</span>
                 </button>
               </div>
             </form>
@@ -942,7 +932,7 @@ export const UsersPage: React.FC = () => {
                   <Edit2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#0B1633]">Edit User Account</h3>
+                  <h3 className="text-base font-bold text-[#0B1633]">Edit user account</h3>
                   <p className="text-xs text-[#5B6578]">Update user details or perform password reset</p>
                 </div>
               </div>
@@ -967,7 +957,7 @@ export const UsersPage: React.FC = () => {
             <form onSubmit={handleUpdateUser} className="space-y-4 text-xs">
               {/* Name */}
               <div>
-                <label className="block font-semibold text-[#0B1633] mb-1">Full Name</label>
+                <label className="block font-semibold text-[#0B1633] mb-1">Full name</label>
                 <input
                   type="text"
                   required
@@ -979,7 +969,7 @@ export const UsersPage: React.FC = () => {
 
               {/* Email */}
               <div>
-                <label className="block font-semibold text-[#0B1633] mb-1">Email Address</label>
+                <label className="block font-semibold text-[#0B1633] mb-1">Email address</label>
                 <input
                   type="email"
                   required
@@ -992,7 +982,7 @@ export const UsersPage: React.FC = () => {
               {/* Role Selection */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="font-semibold text-[#0B1633]">Assigned Role</label>
+                  <label className="font-semibold text-[#0B1633]">Assigned role</label>
                   {currentUser?.id === userToEdit.id && (
                     <span className="text-[10px] text-[#C77700] flex items-center gap-1 font-medium">
                       <HelpCircle className="w-3 h-3" />
@@ -1046,7 +1036,7 @@ export const UsersPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-1">
                   <label className="font-semibold text-[#0B1633] flex items-center gap-1.5">
                     <KeyRound className="w-3.5 h-3.5 text-[#C77700]" />
-                    <span>Reset Password (Optional)</span>
+                    <span>Reset password (optional)</span>
                   </label>
                   <button
                     type="button"
@@ -1056,7 +1046,7 @@ export const UsersPage: React.FC = () => {
                     }}
                     className="inline-flex items-center gap-1 text-[11px] text-[#1A2BC3] hover:underline font-semibold"
                   >
-                    <Sparkles className="w-3 h-3" />
+                    <KeyRound className="w-3.5 h-3.5" />
                     <span>Generate</span>
                   </button>
                 </div>
@@ -1100,7 +1090,7 @@ export const UsersPage: React.FC = () => {
                   ) : (
                     <CheckCircle2 className="w-4 h-4" />
                   )}
-                  <span>Save Changes</span>
+                  <span>Save changes</span>
                 </button>
               </div>
             </form>
@@ -1119,11 +1109,10 @@ export const UsersPage: React.FC = () => {
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="text-base font-bold text-[#0B1633]">Deactivate User Account?</h3>
+              <h3 className="text-base font-bold text-[#0B1633]">Deactivate user account?</h3>
               <p className="text-xs text-[#5B6578]">
                 Are you sure you want to deactivate{' '}
-                <strong className="text-[#1F2A44]">{userToDeactivate.name}</strong> (
-                <span className="font-mono">{userToDeactivate.email}</span>)?
+                <strong className="text-[#1F2A44]">{userToDeactivate.name}</strong> ({userToDeactivate.email})?
               </p>
               <p className="text-[11px] text-[#D92D20] bg-[#FDECEA] p-2 rounded-lg mt-2 font-medium">
                 They will immediately lose access and be unable to log in to CryoGuard.
@@ -1152,7 +1141,7 @@ export const UsersPage: React.FC = () => {
                 ) : (
                   <UserX className="w-3.5 h-3.5" />
                 )}
-                <span>Confirm Deactivate</span>
+                <span>Confirm deactivate</span>
               </button>
             </div>
           </div>
