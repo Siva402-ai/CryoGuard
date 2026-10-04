@@ -168,30 +168,30 @@ export const ingestReading = async (req: Request, res: Response) => {
     let tempMessage = '';
     if (temperature_c >= equipment.temp_crit_c) {
       tempStatus = EquipmentStatus.CRITICAL;
-      tempMessage = `${equipment.code} temperature ${temperature_c.toFixed(2)}°C exceeded critical threshold (${equipment.temp_crit_c}°C)`;
+      tempMessage = `${equipment.code} temperature ${temperature_c.toFixed(2)}°C exceeded critical threshold (${equipment.temp_crit_c.toFixed(2)}°C)`;
     } else if (temperature_c >= equipment.temp_warn_c) {
       tempStatus = EquipmentStatus.WARNING;
-      tempMessage = `${equipment.code} temperature ${temperature_c.toFixed(2)}°C exceeded warning threshold (${equipment.temp_warn_c}°C)`;
+      tempMessage = `${equipment.code} temperature ${temperature_c.toFixed(2)}°C exceeded warning threshold (${equipment.temp_warn_c.toFixed(2)}°C)`;
     }
 
     let pressureStatus: EquipmentStatus = EquipmentStatus.NORMAL;
     let pressureMessage = '';
     if (pressure_bar >= equipment.pressure_crit_bar) {
       pressureStatus = EquipmentStatus.CRITICAL;
-      pressureMessage = `${equipment.code} pressure ${pressure_bar.toFixed(2)} bar exceeded critical threshold (${equipment.pressure_crit_bar} bar)`;
+      pressureMessage = `${equipment.code} pressure ${pressure_bar.toFixed(2)} bar exceeded critical threshold (${equipment.pressure_crit_bar.toFixed(2)} bar)`;
     } else if (pressure_bar >= equipment.pressure_warn_bar) {
       pressureStatus = EquipmentStatus.WARNING;
-      pressureMessage = `${equipment.code} pressure ${pressure_bar.toFixed(2)} bar exceeded warning threshold (${equipment.pressure_warn_bar} bar)`;
+      pressureMessage = `${equipment.code} pressure ${pressure_bar.toFixed(2)} bar exceeded warning threshold (${equipment.pressure_warn_bar.toFixed(2)} bar)`;
     }
 
     let levelStatus: EquipmentStatus = EquipmentStatus.NORMAL;
     let levelMessage = '';
     if (level_pct <= equipment.level_crit_pct) {
       levelStatus = EquipmentStatus.CRITICAL;
-      levelMessage = `${equipment.code} level ${level_pct.toFixed(2)}% dropped below critical threshold (${equipment.level_crit_pct}%)`;
+      levelMessage = `${equipment.code} level ${level_pct.toFixed(2)}% dropped below critical threshold (${equipment.level_crit_pct.toFixed(2)}%)`;
     } else if (level_pct <= equipment.level_warn_pct) {
       levelStatus = EquipmentStatus.WARNING;
-      levelMessage = `${equipment.code} level ${level_pct.toFixed(2)}% dropped below warning threshold (${equipment.level_warn_pct}%)`;
+      levelMessage = `${equipment.code} level ${level_pct.toFixed(2)}% dropped below warning threshold (${equipment.level_warn_pct.toFixed(2)}%)`;
     }
 
     // Determine overall computedStatus for equipment
