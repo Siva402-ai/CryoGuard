@@ -69,7 +69,9 @@ export const Topbar: React.FC<TopbarProps> = ({ onMenuClick, openAlertsCount = 0
           >
             <Bell className="w-5 h-5" strokeWidth={1.75} />
             {openAlertsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-status-critical" />
+              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-status-critical text-white text-[10px] font-bold leading-none shadow-sm">
+                {openAlertsCount}
+              </span>
             )}
           </Link>
 

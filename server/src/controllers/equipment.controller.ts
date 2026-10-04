@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { MaterialType, EquipmentStatus } from '@prisma/client';
 import { prisma } from '../db/prisma';
 import { redis } from '../db/redis';
+import { writeAudit } from '../utils/audit';
 
 // Zod schemas for Equipment validation
 const equipmentSchema = z.object({
@@ -180,6 +181,14 @@ export const createEquipment = async (req: Request, res: Response) => {
       data,
     });
 
+    await writeAudit({
+      userId: req.user?.userId,
+      action: 'CREATE_EQUIPMENT',
+      entity: 'Equipment',
+      entityId: newEquipment.id,
+      meta: { code: newEquipment.code, name: newEquipment.name, material: newEquipment.material },
+    });
+
     return res.status(201).json({
       message: 'Equipment created successfully',
       equipment: newEquipment,
@@ -239,6 +248,14 @@ export const updateEquipment = async (req: Request, res: Response) => {
       data,
     });
 
+    await writeAudit({
+      userId: req.user?.userId,
+      action: 'UPDATE_EQUIPMENT',
+      entity: 'Equipment',
+      entityId: id,
+      meta: { code: updated.code, changedFields: Object.keys(data) },
+    });
+
     return res.status(200).json({
       message: 'Equipment updated successfully',
       equipment: updated,
@@ -290,6 +307,14 @@ export const deleteEquipment = async (req: Request, res: Response) => {
 
     await prisma.equipment.delete({
       where: { id },
+    });
+
+    await writeAudit({
+      userId: req.user?.userId,
+      action: 'DELETE_EQUIPMENT',
+      entity: 'Equipment',
+      entityId: id,
+      meta: { code: existing.code, name: existing.name },
     });
 
     // Invalidate Redis cache

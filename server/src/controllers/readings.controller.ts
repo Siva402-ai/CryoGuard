@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { EquipmentStatus } from '@prisma/client';
+import { EquipmentStatus, AlertType, AlertSeverity, AlertStatus } from '@prisma/client';
 import { prisma } from '../db/prisma';
 import { redis } from '../db/redis';
 
@@ -16,6 +16,104 @@ const readingIngestSchema = z.object({
     .max(100, 'level_pct cannot exceed 100'),
   recorded_at: z.string().datetime().optional(),
 });
+
+interface MetricAlertCheck {
+  type: AlertType;
+  status: EquipmentStatus;
+  value: number;
+  message: string;
+}
+
+async function handleMetricAlert(equipment: any, check: MetricAlertCheck) {
+  if (check.status === EquipmentStatus.NORMAL || check.status === EquipmentStatus.OFFLINE) {
+    return;
+  }
+
+  const targetSeverity =
+    check.status === EquipmentStatus.CRITICAL ? AlertSeverity.CRITICAL : AlertSeverity.WARNING;
+
+  // DB source of truth for active alert (OPEN or ACKNOWLEDGED)
+  const activeAlert = await prisma.alert.findFirst({
+    where: {
+      equipment_id: equipment.id,
+      type: check.type,
+      status: { in: [AlertStatus.OPEN, AlertStatus.ACKNOWLEDGED] },
+    },
+    include: {
+      equipment: {
+        select: { id: true, code: true, name: true, material: true, location: true },
+      },
+    },
+  });
+
+  if (!activeAlert) {
+    // Create new alert row
+    const newAlert = await prisma.alert.create({
+      data: {
+        equipment_id: equipment.id,
+        type: check.type,
+        severity: targetSeverity,
+        message: check.message,
+        value: check.value,
+        status: AlertStatus.OPEN,
+      },
+      include: {
+        equipment: {
+          select: { id: true, code: true, name: true, material: true, location: true },
+        },
+      },
+    });
+
+    // Set fast path dedupe key in Redis and publish alert.created
+    try {
+      if (redis.status === 'ready') {
+        await redis.set(`alert:active:${equipment.id}:${check.type}`, newAlert.id);
+        await redis.publish(
+          'alerts',
+          JSON.stringify({
+            event: 'alert.created',
+            alert: newAlert,
+          }),
+        );
+      }
+    } catch (e) {
+      console.warn('Redis pub/sub warning on alert.created:', (e as Error).message);
+    }
+  } else if (
+    activeAlert.severity === AlertSeverity.WARNING &&
+    targetSeverity === AlertSeverity.CRITICAL
+  ) {
+    // Escalate in-place
+    const updatedAlert = await prisma.alert.update({
+      where: { id: activeAlert.id },
+      data: {
+        severity: AlertSeverity.CRITICAL,
+        message: check.message,
+        value: check.value,
+      },
+      include: {
+        equipment: {
+          select: { id: true, code: true, name: true, material: true, location: true },
+        },
+      },
+    });
+
+    try {
+      if (redis.status === 'ready') {
+        await redis.set(`alert:active:${equipment.id}:${check.type}`, updatedAlert.id);
+        await redis.publish(
+          'alerts',
+          JSON.stringify({
+            event: 'alert.updated',
+            alert: updatedAlert,
+          }),
+        );
+      }
+    } catch (e) {
+      console.warn('Redis pub/sub warning on alert.updated:', (e as Error).message);
+    }
+  }
+}
 
 export const ingestReading = async (req: Request, res: Response) => {
   try {
@@ -66,33 +164,38 @@ export const ingestReading = async (req: Request, res: Response) => {
     });
 
     // 5. Evaluate Thresholds
-    let computedStatus: EquipmentStatus = EquipmentStatus.NORMAL;
-
-    // Evaluate Temperature Thresholds
     let tempStatus: EquipmentStatus = EquipmentStatus.NORMAL;
+    let tempMessage = '';
     if (temperature_c >= equipment.temp_crit_c) {
       tempStatus = EquipmentStatus.CRITICAL;
+      tempMessage = `${equipment.code} temperature ${temperature_c.toFixed(1)}°C exceeded critical threshold (${equipment.temp_crit_c}°C)`;
     } else if (temperature_c >= equipment.temp_warn_c) {
       tempStatus = EquipmentStatus.WARNING;
+      tempMessage = `${equipment.code} temperature ${temperature_c.toFixed(1)}°C exceeded warning threshold (${equipment.temp_warn_c}°C)`;
     }
 
-    // Evaluate Pressure Thresholds
     let pressureStatus: EquipmentStatus = EquipmentStatus.NORMAL;
+    let pressureMessage = '';
     if (pressure_bar >= equipment.pressure_crit_bar) {
       pressureStatus = EquipmentStatus.CRITICAL;
+      pressureMessage = `${equipment.code} pressure ${pressure_bar.toFixed(2)} bar exceeded critical threshold (${equipment.pressure_crit_bar} bar)`;
     } else if (pressure_bar >= equipment.pressure_warn_bar) {
       pressureStatus = EquipmentStatus.WARNING;
+      pressureMessage = `${equipment.code} pressure ${pressure_bar.toFixed(2)} bar exceeded warning threshold (${equipment.pressure_warn_bar} bar)`;
     }
 
-    // Evaluate Level Thresholds (Levels below threshold indicate depletion)
     let levelStatus: EquipmentStatus = EquipmentStatus.NORMAL;
+    let levelMessage = '';
     if (level_pct <= equipment.level_crit_pct) {
       levelStatus = EquipmentStatus.CRITICAL;
+      levelMessage = `${equipment.code} level ${level_pct.toFixed(1)}% dropped below critical threshold (${equipment.level_crit_pct}%)`;
     } else if (level_pct <= equipment.level_warn_pct) {
       levelStatus = EquipmentStatus.WARNING;
+      levelMessage = `${equipment.code} level ${level_pct.toFixed(1)}% dropped below warning threshold (${equipment.level_warn_pct}%)`;
     }
 
-    // Priority resolution: CRITICAL > WARNING > NORMAL
+    // Determine overall computedStatus for equipment
+    let computedStatus: EquipmentStatus = EquipmentStatus.NORMAL;
     if (
       tempStatus === EquipmentStatus.CRITICAL ||
       pressureStatus === EquipmentStatus.CRITICAL ||
@@ -137,6 +240,28 @@ export const ingestReading = async (req: Request, res: Response) => {
     } catch (cacheErr) {
       console.warn(`Redis caching notice for equipment ${equipment.id}:`, (cacheErr as Error).message);
     }
+
+    // 8. Process Alerts for Breached Thresholds
+    await handleMetricAlert(equipment, {
+      type: AlertType.TEMPERATURE,
+      status: tempStatus,
+      value: temperature_c,
+      message: tempMessage,
+    });
+
+    await handleMetricAlert(equipment, {
+      type: AlertType.PRESSURE,
+      status: pressureStatus,
+      value: pressure_bar,
+      message: pressureMessage,
+    });
+
+    await handleMetricAlert(equipment, {
+      type: AlertType.LEVEL,
+      status: levelStatus,
+      value: level_pct,
+      message: levelMessage,
+    });
 
     return res.status(201).json({
       message: 'Reading recorded and telemetry evaluated successfully',

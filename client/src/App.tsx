@@ -8,9 +8,9 @@ import { DashboardPage } from './pages/DashboardPage';
 import { EquipmentListPage } from './pages/EquipmentListPage';
 import { EquipmentDetailPage } from './pages/EquipmentDetailPage';
 import { UsersPage } from './pages/UsersPage';
+import { AlertsPage } from './pages/AlertsPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import {
-  Bell,
   Wrench,
   ClipboardCheck,
   Package,
@@ -31,18 +31,7 @@ export default function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/equipment" element={<EquipmentListPage />} />
               <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
-
-              <Route
-                path="/alerts"
-                element={
-                  <PlaceholderPage
-                    title="Alerts & Telemetry"
-                    subtitle="Real-time threshold evaluations, active alerts, and incident resolution"
-                    phase="Phase 3"
-                    icon={Bell}
-                  />
-                }
-              />
+              <Route path="/alerts" element={<AlertsPage />} />
               <Route
                 path="/maintenance"
                 element={
