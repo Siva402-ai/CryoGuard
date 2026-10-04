@@ -166,7 +166,7 @@ export const acknowledgeAlert = async (req: Request, res: Response) => {
       entity: 'Alert',
       entityId: id,
       meta: {
-        equipmentCode: updated.equipment.code,
+        equipmentCode: updated.equipment?.code || 'INVENTORY',
         severity: updated.severity,
         type: updated.type,
       },
@@ -246,7 +246,11 @@ export const resolveAlert = async (req: Request, res: Response) => {
     // Delete Redis dedupe key
     try {
       if (redis.status === 'ready') {
-        await redis.del(`alert:active:${updated.equipment_id}:${updated.type}`);
+        if (updated.equipment_id) {
+          await redis.del(`alert:active:${updated.equipment_id}:${updated.type}`);
+        } else if (updated.type === AlertType.INVENTORY && updated.source_id) {
+          await redis.del(`alert:active:INVENTORY:${updated.source_id}`);
+        }
         await redis.publish(
           'alerts',
           JSON.stringify({
@@ -266,7 +270,7 @@ export const resolveAlert = async (req: Request, res: Response) => {
       entity: 'Alert',
       entityId: id,
       meta: {
-        equipmentCode: updated.equipment.code,
+        equipmentCode: updated.equipment?.code || 'INVENTORY',
         severity: updated.severity,
         type: updated.type,
       },

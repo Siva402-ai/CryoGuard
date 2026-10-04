@@ -152,6 +152,8 @@ async function main() {
   console.log(`✅ Seeded ${equipmentData.length} cryogenic storage units`);
 
   // 3. Seed Inventory Items
+  const adminUserForSeed = await prisma.user.findUnique({ where: { email: 'admin@cryoguard.com' } });
+
   const inventoryData = [
     {
       name: 'Liquid Nitrogen Bulk',
@@ -164,8 +166,8 @@ async function main() {
       name: 'Liquid Oxygen Bulk',
       material: 'LOX',
       unit: 'Liters',
-      quantity: 14200,
-      min_quantity: 4000,
+      quantity: 850,
+      min_quantity: 800,
     },
     {
       name: 'Liquid Argon Bulk',
@@ -209,14 +211,48 @@ async function main() {
       where: { name: item.name },
     });
     if (existing) {
+      // Idempotent: Update metadata but do NOT reset live stock quantity
       await prisma.inventoryItem.update({
         where: { id: existing.id },
-        data: item,
+        data: {
+          material: item.material,
+          unit: item.unit,
+          min_quantity: item.min_quantity,
+        },
       });
+
+      // Ensure Initial stock transaction exists if no transactions yet
+      if (adminUserForSeed) {
+        const txCount = await prisma.inventoryTransaction.count({
+          where: { item_id: existing.id },
+        });
+        if (txCount === 0 && existing.quantity > 0) {
+          await prisma.inventoryTransaction.create({
+            data: {
+              item_id: existing.id,
+              type: 'IN',
+              quantity: existing.quantity,
+              reason: 'Initial stock',
+              user_id: adminUserForSeed.id,
+            },
+          });
+        }
+      }
     } else {
-      await prisma.inventoryItem.create({
+      const createdItem = await prisma.inventoryItem.create({
         data: item,
       });
+      if (adminUserForSeed && item.quantity > 0) {
+        await prisma.inventoryTransaction.create({
+          data: {
+            item_id: createdItem.id,
+            type: 'IN',
+            quantity: item.quantity,
+            reason: 'Initial stock',
+            user_id: adminUserForSeed.id,
+          },
+        });
+      }
     }
   }
   console.log(`✅ Seeded ${inventoryData.length} inventory items`);

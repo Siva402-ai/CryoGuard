@@ -18,7 +18,7 @@ export interface AlertEquipment {
 
 export interface Alert {
   id: string;
-  equipment_id: string;
+  equipment_id: string | null;
   source_id?: string | null;
   type: AlertType;
   severity: AlertSeverity;
@@ -30,7 +30,7 @@ export interface Alert {
   resolved_by: string | null;
   resolved_at: string | null;
   created_at: string;
-  equipment?: AlertEquipment;
+  equipment?: AlertEquipment | null;
 }
 
 export interface AlertsResponse {

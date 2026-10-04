@@ -12,9 +12,9 @@ import { AlertsPage } from './pages/AlertsPage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { InspectionsPage } from './pages/InspectionsPage';
 import { InspectionDetailPage } from './pages/InspectionDetailPage';
+import { InventoryPage } from './pages/InventoryPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import {
-  Package,
   BarChart3,
 } from 'lucide-react';
 
@@ -36,17 +36,7 @@ export default function App() {
               <Route path="/maintenance" element={<MaintenancePage />} />
               <Route path="/inspections" element={<InspectionsPage />} />
               <Route path="/inspections/:id" element={<InspectionDetailPage />} />
-              <Route
-                path="/inventory"
-                element={
-                  <PlaceholderPage
-                    title="Inventory"
-                    subtitle="Cryogenic liquids volume inventory, spare parts, and restock requests"
-                    phase="Phase 6"
-                    icon={Package}
-                  />
-                }
-              />
+              <Route path="/inventory" element={<InventoryPage />} />
               <Route
                 path="/reports"
                 element={

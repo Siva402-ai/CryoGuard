@@ -85,11 +85,11 @@ export const getDashboardSummary = async (_req: Request, res: Response) => {
       },
     });
 
-    // 5. Low stock inventory items count (from real table, 0 until Phase 6)
+    // 5. Low stock inventory items count (items where quantity < min_quantity)
     const allInventoryItems = await prisma.inventoryItem.findMany({
       select: { quantity: true, min_quantity: true },
     });
-    const lowStockCount = allInventoryItems.filter((i) => i.quantity <= i.min_quantity).length;
+    const lowStockCount = allInventoryItems.filter((i) => i.quantity < i.min_quantity).length;
 
     // 6. Tank table with latest Redis-cached readings
     const equipmentList = await prisma.equipment.findMany({

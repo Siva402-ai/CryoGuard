@@ -262,14 +262,25 @@ export const AlertsPage: React.FC = () => {
                         </span>
                       </td>
 
-                      {/* Equipment Link */}
+                      {/* Equipment / Target Link */}
                       <td className="py-4 px-4 font-bold text-navy whitespace-nowrap">
-                        <Link
-                          to={`/equipment/${alert.equipment_id}`}
-                          className="text-primary hover:underline inline-flex items-center space-x-1"
-                        >
-                          <span>{alert.equipment?.code || 'UNIT'}</span>
-                        </Link>
+                        {alert.type === 'INVENTORY' ? (
+                          <Link
+                            to="/inventory"
+                            className="text-primary hover:underline inline-flex items-center space-x-1"
+                          >
+                            <span>INVENTORY</span>
+                          </Link>
+                        ) : alert.equipment_id ? (
+                          <Link
+                            to={`/equipment/${alert.equipment_id}`}
+                            className="text-primary hover:underline inline-flex items-center space-x-1"
+                          >
+                            <span>{alert.equipment?.code || 'UNIT'}</span>
+                          </Link>
+                        ) : (
+                          <span className="text-muted text-sm font-normal">FACILITY</span>
+                        )}
                       </td>
 
                       {/* Type */}
@@ -287,6 +298,13 @@ export const AlertsPage: React.FC = () => {
                             className="px-2 py-0.5 rounded text-[11px] font-bold uppercase bg-status-critical-bg text-status-critical hover:underline inline-flex items-center"
                           >
                             INSPECTION
+                          </Link>
+                        ) : alert.type === 'INVENTORY' ? (
+                          <Link
+                            to="/inventory"
+                            className="px-2 py-0.5 rounded text-[11px] font-bold uppercase bg-status-warning-bg text-status-warning hover:underline inline-flex items-center"
+                          >
+                            INVENTORY
                           </Link>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[11px] font-semibold uppercase bg-primary-soft text-primary">

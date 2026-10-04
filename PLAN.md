@@ -56,7 +56,7 @@ cryoguard/
 | `users` | id, name, email (unique), password_hash, role (`ADMIN`, `STAFF`; default `STAFF`), is_active, created_at. Many users allowed, each has exactly one role |
 | `equipment` | id, code (unique, e.g. C-001), name, material (`LN2`, `LOX`, `ARGON`), capacity_l, location, temp_warn_c, temp_crit_c, pressure_warn_bar, pressure_crit_bar, level_warn_pct, level_crit_pct, status (`NORMAL`, `WARNING`, `CRITICAL`, `OFFLINE`), created_at |
 | `sensor_readings` | id, equipment_id, temperature_c, pressure_bar, level_pct, recorded_at. Index on (equipment_id, recorded_at DESC) |
-| `alerts` | id, equipment_id, source_id (nullable, e.g. maintenance task id), type (`TEMPERATURE`, `PRESSURE`, `LEVEL`, `MAINTENANCE`, `INSPECTION`, `INVENTORY`), severity (`WARNING`, `CRITICAL`), message, value, status (`OPEN`, `ACKNOWLEDGED`, `RESOLVED`), acknowledged_by, acknowledged_at, resolved_by, resolved_at, created_at |
+| `alerts` | id, equipment_id (nullable, for tank-specific alerts), source_id (nullable, e.g. maintenance task id or inventory item id), type (`TEMPERATURE`, `PRESSURE`, `LEVEL`, `MAINTENANCE`, `INSPECTION`, `INVENTORY`), severity (`WARNING`, `CRITICAL`), message, value, status (`OPEN`, `ACKNOWLEDGED`, `RESOLVED`), acknowledged_by, acknowledged_at, resolved_by, resolved_at, created_at |
 | `maintenance_tasks` | id, equipment_id, title, description, due_date, assigned_to, status (`PENDING`, `SCHEDULED`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE`), recurrence_days (nullable), completed_at, notes |
 | `inspection_templates` | id, name, items (jsonb list of checklist labels) |
 | `inspections` | id, equipment_id, template_id, inspector_id (the user who performed it, any role), performed_at, results (jsonb: item -> pass/fail), overall (`PASS`, `NEEDS_ATTENTION`, `FAIL`), findings, corrective_action |
@@ -107,7 +107,7 @@ Level: warning below 30%, critical below 15%. Pressure: warning above 1.8 bar, c
 **Inventory**
 - `GET /inventory`, `POST /inventory`, `PUT /inventory/:id`
 - `POST /inventory/:id/transactions`, `GET /inventory/:id/transactions`
-- `GET /restock-requests`, `POST /restock-requests`, `PATCH /restock-requests/:id` (approve/reject/receive)
+- `GET /restock-requests?status=&itemId=`, `POST /restock-requests`, `PATCH /restock-requests/:id` (actions: approve/reject/order/receive)
 
 **Reports**
 - `GET /reports/temperature-trend`, `/reports/alerts-by-month`, `/reports/maintenance-history`, `/reports/inventory-consumption`
@@ -218,9 +218,9 @@ Each phase ends with something runnable and a Git commit/PR.
 - **Done when:** a failed item creates an `INSPECTION` alert.
 
 ### Phase 6: Inventory
-- Items, transactions, low-stock alert, restock request workflow
-- React: inventory table with status colors, transaction dialog, restock requests list
-- **Done when:** an `OUT` transaction below minimum triggers the alert and a restock request can be approved.
+- Items, transactions (IN/OUT/ADJUST with atomic DB updates & negative stock prevention), low-stock alert evaluation (stockStatus GOOD/LOW/CRITICAL, auto-escalate and auto-resolve, Redis dedupe key `alert:active:INVENTORY:{itemId}`), restock request workflow (PENDING -> APPROVED/REJECTED -> ORDERED -> RECEIVED, receive triggers IN transaction), audit logging.
+- React: inventory table with status colors & stock level bar, transaction dialog with live preview and negative prevention, item transaction history drawer, restock requests tab with action transitions and prefilled restock dialog, alert/dashboard inventory integration with item names.
+- **Done when:** an `OUT` transaction below minimum triggers the alert, escalates on critical, auto-resolves on restock, and restock requests can be approved, ordered, and received.
 
 ### Phase 7: Reports
 - Four report endpoints + CSV export

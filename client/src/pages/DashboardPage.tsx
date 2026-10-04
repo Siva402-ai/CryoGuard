@@ -213,24 +213,43 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* KPI 4: Low Stock Items */}
-        <div className="bg-surface border border-border rounded-2xl shadow-card p-6 flex flex-col justify-between">
+        <Link
+          to="/inventory"
+          className="bg-surface border border-border rounded-2xl shadow-card p-6 flex flex-col justify-between hover:border-primary/40 transition-colors group"
+        >
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-semibold text-muted uppercase tracking-wider block mb-1">
                 Low Stock
               </span>
-              <span className="text-3xl font-bold text-navy block">
+              <span className="text-3xl font-bold text-navy block group-hover:text-primary transition-colors">
                 {summary?.lowStockCount ?? 0}
               </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-status-offline-bg text-status-offline flex items-center justify-center flex-shrink-0">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                (summary?.lowStockCount ?? 0) > 0
+                  ? 'bg-status-warning-bg text-status-warning'
+                  : 'bg-status-success-bg text-status-success'
+              }`}
+            >
               <Package className="w-5 h-5" strokeWidth={1.75} />
             </div>
           </div>
-          <div className="mt-3 text-xs text-muted font-medium">
-            <span>Bulk materials nominal</span>
+          <div className="mt-3 text-xs font-medium">
+            {(summary?.lowStockCount ?? 0) > 0 ? (
+              <span className="text-status-warning inline-flex items-center">
+                <AlertTriangle className="w-3.5 h-3.5 mr-1" />
+                {summary?.lowStockCount} item{summary?.lowStockCount === 1 ? '' : 's'} below minimum
+              </span>
+            ) : (
+              <span className="text-status-success inline-flex items-center">
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                All supplies nominal
+              </span>
+            )}
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Middle Section: Tank Status Table (8 cols) + Recent Alerts Feed (4 cols) */}
@@ -397,7 +416,7 @@ export const DashboardPage: React.FC = () => {
                             }`}
                           />
                           <span className="text-xs font-bold text-navy">
-                            {alert.equipment?.code || 'TANK'}
+                            {alert.type === 'INVENTORY' ? 'INVENTORY' : alert.equipment?.code || 'TANK'}
                           </span>
                           <span
                             className={`px-1.5 py-0.2 rounded text-[10px] font-bold uppercase ${
@@ -423,6 +442,17 @@ export const DashboardPage: React.FC = () => {
                         {alert.message}
                       </p>
 
+                      {alert.type === 'INVENTORY' && (
+                        <div className="mt-1">
+                          <Link
+                            to="/inventory"
+                            className="text-[11px] font-semibold text-primary hover:underline inline-flex items-center space-x-1"
+                          >
+                            <span>Manage Inventory Stock &rarr;</span>
+                          </Link>
+                        </div>
+                      )}
+
                       {alert.type === 'MAINTENANCE' && (
                         <div className="mt-1">
                           <Link
@@ -446,7 +476,14 @@ export const DashboardPage: React.FC = () => {
                       )}
 
                       <div className="mt-2 flex items-center justify-between text-[11px] text-muted">
-                        {alert.type === 'MAINTENANCE' ? (
+                        {alert.type === 'INVENTORY' ? (
+                          <Link
+                            to="/inventory"
+                            className="font-semibold uppercase tracking-wider text-[10px] text-status-warning hover:underline"
+                          >
+                            INVENTORY
+                          </Link>
+                        ) : alert.type === 'MAINTENANCE' ? (
                           <Link
                             to="/maintenance"
                             className="font-semibold uppercase tracking-wider text-[10px] text-status-info hover:underline"
