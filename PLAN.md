@@ -192,7 +192,7 @@ Each phase ends with something runnable and a Git commit/PR.
 
 ### Phase 1: Auth & roles (ADMIN / STAFF)
 - Login, JWT (payload: `userId`, `role`), bcrypt, `requireAuth` + `requireRole('ADMIN')` middleware, login rate limiting
-- React: login page, auth context, protected routes, role-aware sidebar (Users & Roles visible to `ADMIN` only), app layout
+- React: login page, auth context, protected routes, role-aware sidebar (Users & Roles visible to `ADMIN` only), app layout shell (sidebar + floating topbar + content area), all styled strictly per Section 10 (UI Design System): Tailwind theme tokens, Plus Jakarta Sans, lucide-react icons, light mode only
 - **Done when:** `admin@cryoguard.com` sees all 8 menu items including Users & Roles; `arun@cryoguard.com` (`STAFF`) sees every menu item except Users & Roles, and calling a `/users` endpoint as `STAFF` returns `403`.
 
 ### Phase 2: Equipment & readings
@@ -270,3 +270,79 @@ Each phase ends with something runnable and a Git commit/PR.
 - **Alert spam:** the Redis dedupe key prevents one alert per reading.
 - **Too much readings data:** keep the simulator interval modest and paginate/limit history queries.
 - **Spec drift with Antigravity:** keep `PLAN.md` updated and commit after every phase.
+
+---
+
+## 10. UI Design System (applies to every phase that builds UI)
+
+**Reference look:** the Ciklum website (ciklum.com): clean, bright, corporate-tech. White surfaces, deep royal blue as the main color, a soft mint accent, navy text, generous spacing, rounded cards and pill buttons with soft shadows. Take the *feel* only. Do not copy Ciklum's logo, text, images or other brand assets; CryoGuard has its own simple wordmark.
+
+**Non-negotiable rules**
+- Light mode only. No dark mode, no theme toggle.
+- No neon, glow, glassmorphism, aurora/blob backgrounds, purple or violet gradients, particle effects, sparkle/"AI" icons, or emojis anywhere in the UI.
+- Gradients are allowed only for: the blue-to-teal accent on a few headline words, the logo mark, and chart area fills (very subtle). Never on page or card backgrounds.
+- Everything aligned to an 8px grid. Consistent padding, consistent card heights per row, no stray margins.
+- Sentence case labels (not ALL CAPS), except tiny table column headers.
+- Icons: `lucide-react` only (the one extra dependency allowed for the UI), 20px, 1.75 stroke.
+- Motion: 150-200ms ease for hover/focus/expand only. No decorative animation.
+
+### Color tokens
+Values are eyeballed from the Ciklum site; tweak the hex values in one place (Tailwind config) if you want a closer match.
+
+| Token | Hex | Use |
+|---|---|---|
+| `primary` | `#1A2BC3` | Primary buttons, active nav, links, main chart series |
+| `primary-hover` | `#1422A3` | Hover/pressed |
+| `primary-soft` | `#EEF1FF` | Active nav background, selected rows, info badges |
+| `accent` | `#7EF0C9` | Secondary pill button (navy text), highlights |
+| `accent-soft` | `#E6FBF3` | Light mint tint backgrounds |
+| `teal` | `#4AA8B5` | Gradient end (with primary), second chart series |
+| `navy` | `#0B1633` | Headings |
+| `text` | `#1F2A44` | Body text |
+| `muted` | `#5B6578` | Secondary text, helper text |
+| `border` | `#E5E9F2` | Card/table/input borders, dividers |
+| `bg` | `#F6F8FC` | App background behind cards |
+| `surface` | `#FFFFFF` | Cards, sidebar, topbar |
+
+**Status colors** (calm, not neon; always pair color with an icon or text label):
+| Status | Text/icon | Background |
+|---|---|---|
+| Normal / success | `#0E9F6E` | `#E7F8F0` |
+| Warning | `#C77700` | `#FFF4DE` |
+| Critical / error | `#D92D20` | `#FDECEA` |
+| Info / scheduled | `#1A2BC3` | `#EEF1FF` |
+| Offline / neutral | `#5B6578` | `#EEF1F6` |
+
+Chart series order: `#1A2BC3`, `#4AA8B5`, `#7EF0C9`, `#94A3B8`. Thin 2px lines, light grid `#EEF1F6`, no glow, no 3D.
+
+### Typography
+- Font: **Plus Jakarta Sans** (fallback: Inter, system-ui, sans-serif), loaded locally or via the Google Fonts link in `index.html`.
+- Page title 28px/600 navy; section title 18px/600; body 14px/400; table text 14px; small/meta 12px muted.
+
+### Layout (desktop first, must also work down to tablet)
+- **Sidebar** (left, full height, white, 1px right border `border`, width 264px):
+  - Top: CryoGuard logo (simple ring/snowflake mark in blue-to-teal + wordmark in navy).
+  - Nav grouped with small muted group labels: **Operations** (Dashboard, Equipment, Alerts, Maintenance, Inspections, Inventory), **Insights** (Reports), **Administration** (Users & Roles, ADMIN only).
+  - Icons (lucide): LayoutDashboard, Container, Bell, Wrench, ClipboardCheck, Package, BarChart3, Users.
+  - Item: 44px tall, rounded-xl, 12px padding. Hover `#F3F5FA`. Active: `primary-soft` background, `primary` text and icon, semibold.
+  - Alerts item shows a small red count pill when there are open alerts.
+  - Bottom: user card (avatar initials, name, role badge `ADMIN`/`STAFF`, logout button).
+  - Below 1280px collapse to an icon rail (72px); below 768px becomes an off-canvas drawer opened from the topbar.
+- **Topbar:** floating rounded-2xl white bar with soft shadow (like Ciklum's nav), 64px tall, inset 16px from the content edge. Left: page title + breadcrumb. Right: bell with open-alert count (links to Alerts) and user menu. No search box.
+- **Content area:** background `bg`, 24-32px padding, max-width 1440px, centered.
+- **Page header pattern:** title + muted subtitle on the left, primary action button on the right (e.g. "Schedule maintenance").
+- **Grid:** 12 columns, 24px gaps. Dashboard = 4 KPI cards on top, then tank status table (8 cols) + recent alerts (4 cols), then the trend chart full width.
+
+### Components
+- **Buttons:** pill-shaped (`rounded-full`), 44px tall. Primary = `primary` background, white text, optional arrow in a white circle (like Ciklum's "Talk to an Expert"). Secondary = `accent` background, navy text. Tertiary = white with `border` outline. Destructive = `#D92D20`, used sparingly.
+- **Cards:** white, `rounded-2xl` (16px), 1px `border`, shadow `0 1px 2px rgba(11,22,51,0.04), 0 8px 24px rgba(11,22,51,0.04)`, 24px padding.
+- **KPI card:** small muted label, big number (32px/600 navy), tiny icon in a `primary-soft` rounded square.
+- **Tables:** inside a card, header row `#F8FAFD` with 12px muted semibold text, 56px rows, hover `#F8FAFD`, bottom borders only, right-aligned numbers, status shown as a badge.
+- **Badges:** pill, 12px/600, colors from the status table, with a small dot or icon.
+- **Forms:** 44px inputs, `rounded-xl`, 1px `border`, focus ring 2px `primary` at 30% opacity; labels above inputs; inline error text in critical red.
+- **Modals/drawers:** white, `rounded-2xl`, dim backdrop `rgba(11,22,51,0.4)`.
+- **Empty, loading and error states:** every list/table/chart has a skeleton, a friendly empty message with an icon, and an inline retry on error.
+- **Login page:** centered white card on `bg`, logo above, same pill primary button, no decorative imagery.
+
+### Acceptance check for any UI phase
+Looks like a bright corporate dashboard, consistent spacing, sidebar highlights the current page, every status has both color and label, nothing is dark, glowing or gradient-heavy.
