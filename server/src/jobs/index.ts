@@ -153,7 +153,7 @@ export async function runMaintenanceCheck() {
     }
   }
 
-  console.log('✅ [maintenance-check] Completed maintenance evaluation pass');
+  console.log('[maintenance-check] Completed maintenance evaluation pass');
 }
 
 export async function runReadingsRetention() {
@@ -167,7 +167,7 @@ export async function runReadingsRetention() {
   });
 
   console.log(
-    `🧹 [readings-retention] Cleaned up ${deleteResult.count} sensor readings older than ${retentionDays} days (cutoff: ${cutoffDate.toISOString()})`,
+    `[readings-retention] Cleaned up ${deleteResult.count} sensor readings older than ${retentionDays} days (cutoff: ${cutoffDate.toISOString()})`,
   );
   return deleteResult.count;
 }
@@ -216,7 +216,7 @@ export async function initBackgroundJobs() {
       },
     },
   );
-  console.log(`⏱️ Registered repeatable job: maintenance-check (${maintenanceCron})`);
+  console.log(`Registered repeatable job: maintenance-check (${maintenanceCron})`);
 
   // 2. Register repeatable readings-retention job
   await systemQueue.add(
@@ -228,9 +228,9 @@ export async function initBackgroundJobs() {
       },
     },
   );
-  console.log(`⏱️ Registered repeatable job: readings-retention (${retentionCron})`);
+  console.log(`Registered repeatable job: readings-retention (${retentionCron})`);
 
   // 3. Run maintenance check once immediately on startup
-  console.log('🚀 Running initial startup maintenance check...');
+  console.log('Running initial startup maintenance check...');
   await runMaintenanceCheck();
 }

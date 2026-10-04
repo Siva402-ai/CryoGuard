@@ -40,3 +40,7 @@ healthRouter.get('/health', async (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+healthRouter.get('/test-error', (_req: Request, _res: Response) => {
+  throw new Error('Deliberately triggered server test error');
+});

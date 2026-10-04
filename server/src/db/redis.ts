@@ -32,7 +32,7 @@ redis.on('error', (err) => {
 });
 
 redis.on('connect', () => {
-  console.log('✅ Connected to Redis (Primary)');
+  console.log('Connected to Redis (Primary)');
 });
 
 redisSub.on('error', (err) => {
@@ -40,7 +40,7 @@ redisSub.on('error', (err) => {
 });
 
 redisSub.on('connect', () => {
-  console.log('✅ Connected to Redis (Subscriber)');
+  console.log('Connected to Redis (Subscriber)');
 });
 
 redisQueueConnection.on('error', (err) => {
@@ -48,5 +48,5 @@ redisQueueConnection.on('error', (err) => {
 });
 
 redisQueueConnection.on('connect', () => {
-  console.log('✅ Connected to Redis (Queue)');
+  console.log('Connected to Redis (Queue)');
 });

@@ -36,7 +36,7 @@ function ensureRedisSubscribed() {
         console.error('Failed to subscribe to Redis alerts channel:', err.message);
       } else {
         isSubscribedToAlerts = true;
-        console.log('📡 Subscribed to Redis channel: alerts');
+        console.log('Subscribed to Redis channel: alerts');
       }
     });
   }
