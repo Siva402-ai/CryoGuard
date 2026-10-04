@@ -10,9 +10,10 @@ import { EquipmentDetailPage } from './pages/EquipmentDetailPage';
 import { UsersPage } from './pages/UsersPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { MaintenancePage } from './pages/MaintenancePage';
+import { InspectionsPage } from './pages/InspectionsPage';
+import { InspectionDetailPage } from './pages/InspectionDetailPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import {
-  ClipboardCheck,
   Package,
   BarChart3,
 } from 'lucide-react';
@@ -33,17 +34,8 @@ export default function App() {
               <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/maintenance" element={<MaintenancePage />} />
-              <Route
-                path="/inspections"
-                element={
-                  <PlaceholderPage
-                    title="Safety Inspections"
-                    subtitle="Checklist-based facility safety audits and inspection templates"
-                    phase="Phase 5"
-                    icon={ClipboardCheck}
-                  />
-                }
-              />
+              <Route path="/inspections" element={<InspectionsPage />} />
+              <Route path="/inspections/:id" element={<InspectionDetailPage />} />
               <Route
                 path="/inventory"
                 element={

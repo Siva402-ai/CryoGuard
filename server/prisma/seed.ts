@@ -1,4 +1,4 @@
-import { PrismaClient, Role, MaterialType, EquipmentStatus, MaintenanceStatus } from '@prisma/client';
+import { PrismaClient, Role, MaterialType, EquipmentStatus, MaintenanceStatus, InspectionResult } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
@@ -221,39 +221,111 @@ async function main() {
   }
   console.log(`✅ Seeded ${inventoryData.length} inventory items`);
 
-  // 4. Seed Inspection Template
-  const templateName = 'Daily Cryogenic Storage & Pressure Vessel Inspection';
-  const checklistItems = [
-    'Pressure relief valve seal intact and unblocked',
-    'Vacuum jacket exterior free of abnormal icing/frost spots',
-    'Digital level and pressure transmitters responding normally',
-    'Emergency shutoff valve accessible and operational',
-    'Earthing / Static grounding clamp securely connected',
-    'Vent piping clear of ice or debris',
-    'Safety signage, MSDS, and area PPE station intact',
+  // 4. Seed Inspection Templates
+  const template1Name = 'Daily Cryogenic Storage & Pressure Vessel Inspection';
+  const template1Items = [
+    { label: 'Pressure relief valve seal intact and unblocked', critical: true },
+    { label: 'Vacuum jacket exterior free of abnormal icing/frost spots', critical: false },
+    { label: 'Digital level and pressure transmitters responding normally', critical: false },
+    { label: 'Emergency shutoff valve accessible and operational', critical: true },
+    { label: 'Leak detection sensor and alarm verified operational', critical: true },
+    { label: 'Earthing / Static grounding clamp securely connected', critical: false },
+    { label: 'Vent piping clear of ice or debris', critical: false },
+    { label: 'Safety signage, MSDS, and area PPE station intact', critical: false },
   ];
 
-  const existingTemplate = await prisma.inspectionTemplate.findFirst({
-    where: { name: templateName },
+  const template2Name = 'PPE & Room Safety Check';
+  const template2Items = [
+    { label: 'PPE available (cryo gloves, face shield, apron)', critical: false },
+    { label: 'O2 monitor tested and calibrated', critical: true },
+    { label: 'Ventilation system working', critical: true },
+    { label: 'Eyewash station accessible and tested', critical: false },
+    { label: 'Safety signage in place', critical: false },
+  ];
+
+  const seededTemplate1 = await prisma.inspectionTemplate.upsert({
+    where: { id: (await prisma.inspectionTemplate.findFirst({ where: { name: template1Name } }))?.id || '00000000-0000-0000-0000-000000000001' },
+    update: {
+      name: template1Name,
+      items: template1Items,
+    },
+    create: {
+      name: template1Name,
+      items: template1Items,
+    },
   });
 
-  if (existingTemplate) {
-    await prisma.inspectionTemplate.update({
-      where: { id: existingTemplate.id },
-      data: {
-        name: templateName,
-        items: checklistItems,
+  const seededTemplate2 = await prisma.inspectionTemplate.upsert({
+    where: { id: (await prisma.inspectionTemplate.findFirst({ where: { name: template2Name } }))?.id || '00000000-0000-0000-0000-000000000002' },
+    update: {
+      name: template2Name,
+      items: template2Items,
+    },
+    create: {
+      name: template2Name,
+      items: template2Items,
+    },
+  });
+  console.log('✅ Seeded 2 inspection templates');
+
+  // Seed 2 Past PASS Inspections (idempotent)
+  const staffArunUser = await prisma.user.findUnique({ where: { email: 'arun@cryoguard.com' } });
+  const staffRaviUser = await prisma.user.findUnique({ where: { email: 'ravi@cryoguard.com' } });
+  const tank1Equip = await prisma.equipment.findUnique({ where: { code: 'C-001' } });
+  const tank2Equip = await prisma.equipment.findUnique({ where: { code: 'C-002' } });
+
+  if (staffArunUser && staffRaviUser && tank1Equip && tank2Equip) {
+    const existingInsp1 = await prisma.inspection.findFirst({
+      where: {
+        equipment_id: tank1Equip.id,
+        template_id: seededTemplate1.id,
       },
     });
-  } else {
-    await prisma.inspectionTemplate.create({
-      data: {
-        name: templateName,
-        items: checklistItems,
+
+    if (!existingInsp1) {
+      await prisma.inspection.create({
+        data: {
+          equipment_id: tank1Equip.id,
+          template_id: seededTemplate1.id,
+          inspector_id: staffArunUser.id,
+          performed_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+          results: template1Items.map((item) => ({
+            item: item.label,
+            result: 'PASS',
+          })),
+          overall: InspectionResult.PASS,
+          findings: 'All safety valves and transmitters nominal. Grounding clamp verified.',
+          corrective_action: null,
+        },
+      });
+    }
+
+    const existingInsp2 = await prisma.inspection.findFirst({
+      where: {
+        equipment_id: tank2Equip.id,
+        template_id: seededTemplate2.id,
       },
     });
+
+    if (!existingInsp2) {
+      await prisma.inspection.create({
+        data: {
+          equipment_id: tank2Equip.id,
+          template_id: seededTemplate2.id,
+          inspector_id: staffRaviUser.id,
+          performed_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+          results: template2Items.map((item) => ({
+            item: item.label,
+            result: 'PASS',
+          })),
+          overall: InspectionResult.PASS,
+          findings: 'O2 monitor and room exhaust ventilation in optimal operational condition.',
+          corrective_action: null,
+        },
+      });
+    }
+    console.log('✅ Seeded past PASS inspections');
   }
-  console.log('✅ Seeded inspection template');
 
   // 5. Seed Demo Maintenance Tasks
   const tank1 = await prisma.equipment.findUnique({ where: { code: 'C-001' } });

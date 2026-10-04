@@ -19,6 +19,7 @@ export interface AlertEquipment {
 export interface Alert {
   id: string;
   equipment_id: string;
+  source_id?: string | null;
   type: AlertType;
   severity: AlertSeverity;
   message: string;

@@ -281,6 +281,13 @@ export const AlertsPage: React.FC = () => {
                           >
                             MAINTENANCE
                           </Link>
+                        ) : alert.type === 'INSPECTION' ? (
+                          <Link
+                            to={alert.source_id ? `/inspections/${alert.source_id}` : '/inspections'}
+                            className="px-2 py-0.5 rounded text-[11px] font-bold uppercase bg-status-critical-bg text-status-critical hover:underline inline-flex items-center"
+                          >
+                            INSPECTION
+                          </Link>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[11px] font-semibold uppercase bg-primary-soft text-primary">
                             {alert.type}
@@ -297,6 +304,14 @@ export const AlertsPage: React.FC = () => {
                             className="text-xs text-primary font-semibold hover:underline inline-flex items-center space-x-1 mt-0.5"
                           >
                             <span>View Task in Schedule &rarr;</span>
+                          </Link>
+                        )}
+                        {alert.type === 'INSPECTION' && (
+                          <Link
+                            to={alert.source_id ? `/inspections/${alert.source_id}` : '/inspections'}
+                            className="text-xs text-primary font-semibold hover:underline inline-flex items-center space-x-1 mt-0.5"
+                          >
+                            <span>View Inspection Audit &rarr;</span>
                           </Link>
                         )}
                       </td>

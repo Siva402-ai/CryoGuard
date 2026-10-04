@@ -20,9 +20,13 @@ import {
   ShieldAlert,
   Wrench,
   Calendar,
+  ClipboardCheck,
+  ShieldCheck,
 } from 'lucide-react';
 import { getMaintenanceTasksApi } from '../api/maintenance';
+import { getInspectionsApi } from '../api/inspections';
 import { MaintenanceTask } from '../types/maintenance';
+import { Inspection, InspectionItemResult } from '../types/inspection';
 import {
   LineChart,
   Line,
@@ -42,9 +46,11 @@ export const EquipmentDetailPage: React.FC = () => {
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [readings, setReadings] = useState<SensorReading[]>([]);
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>([]);
+  const [inspections, setInspections] = useState<Inspection[]>([]);
   const [loadingEquipment, setLoadingEquipment] = useState(true);
   const [loadingReadings, setLoadingReadings] = useState(true);
   const [loadingMaintenance, setLoadingMaintenance] = useState(true);
+  const [loadingInspections, setLoadingInspections] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('1h');
 
@@ -54,6 +60,7 @@ export const EquipmentDetailPage: React.FC = () => {
     setLoadingEquipment(true);
     setLoadingReadings(true);
     setLoadingMaintenance(true);
+    setLoadingInspections(true);
 
     try {
       // 1. Fetch Equipment Details
@@ -71,7 +78,17 @@ export const EquipmentDetailPage: React.FC = () => {
         setLoadingMaintenance(false);
       }
 
-      // 3. Fetch Readings based on Time Range
+      // 3. Fetch Safety Inspections for this unit (latest 5)
+      try {
+        const inspData = await getInspectionsApi({ equipmentId: id, limit: 5 });
+        setInspections(inspData.inspections || []);
+      } catch (inspErr) {
+        console.error('Failed to load inspections for unit:', inspErr);
+      } finally {
+        setLoadingInspections(false);
+      }
+
+      // 4. Fetch Readings based on Time Range
       const now = new Date();
       let fromDate: Date;
       if (timeRange === '1h') {
@@ -100,6 +117,7 @@ export const EquipmentDetailPage: React.FC = () => {
       setLoadingEquipment(false);
       setLoadingReadings(false);
       setLoadingMaintenance(false);
+      setLoadingInspections(false);
     }
   };
 
@@ -674,6 +692,108 @@ export const EquipmentDetailPage: React.FC = () => {
                         ) : (
                           <span className="text-muted italic">Pending completion</span>
                         )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Safety Inspection History Section */}
+      <div className="bg-surface border border-border rounded-2xl shadow-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center">
+              <ClipboardCheck className="w-4 h-4" strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-navy">Safety Inspection Audits (Recent 5)</h3>
+              <p className="text-xs text-muted">Integrity compliance assessments and checklist findings for this vessel</p>
+            </div>
+          </div>
+          <Link
+            to="/inspections"
+            className="text-xs font-semibold text-primary hover:text-primary-hover inline-flex items-center space-x-1"
+          >
+            <span>All Safety Audits</span>
+            <ClipboardCheck className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {loadingInspections ? (
+          <div className="space-y-3 py-4">
+            <div className="h-10 bg-border/40 rounded-xl animate-pulse" />
+            <div className="h-10 bg-border/40 rounded-xl animate-pulse" />
+          </div>
+        ) : inspections.length === 0 ? (
+          <div className="py-8 text-center border border-dashed border-border rounded-xl">
+            <ShieldCheck className="w-8 h-8 text-muted mx-auto mb-2 opacity-50" />
+            <p className="text-sm font-semibold text-navy">No Safety Inspection Records</p>
+            <p className="text-xs text-muted mt-0.5">No routine safety audits have been filed for {equipment.code} yet.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-6">
+            <table className="w-full text-left text-sm border-collapse min-w-[650px]">
+              <thead>
+                <tr className="bg-[#F8FAFD] border-b border-border text-[11px] font-semibold text-muted uppercase tracking-wider">
+                  <th className="py-3 px-6">Audit Date</th>
+                  <th className="py-3 px-4">Protocol Template</th>
+                  <th className="py-3 px-4">Inspector</th>
+                  <th className="py-3 px-4">Outcome</th>
+                  <th className="py-3 px-4">Checklist Score</th>
+                  <th className="py-3 px-6 text-right">Report</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border text-xs">
+                {inspections.map((insp) => {
+                  const resultsList = (Array.isArray(insp.results) ? insp.results : []) as InspectionItemResult[];
+                  const failedCount = resultsList.filter((r) => r.result === 'FAIL').length;
+                  const totalCount = resultsList.length;
+
+                  return (
+                    <tr key={insp.id} className="hover:bg-[#F8FAFD] transition-colors">
+                      <td className="py-3.5 px-6 font-semibold text-navy whitespace-nowrap">
+                        {new Date(insp.performed_at).toLocaleDateString()}
+                        <span className="text-[11px] text-muted font-normal block font-mono">
+                          {new Date(insp.performed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 font-medium text-navy">
+                        {insp.template?.name || 'Safety Protocol'}
+                      </td>
+                      <td className="py-3.5 px-4 text-muted whitespace-nowrap">
+                        {insp.inspector?.name || 'Staff User'}
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                            insp.overall === 'PASS'
+                              ? 'bg-status-success-bg text-status-success'
+                              : insp.overall === 'FAIL'
+                              ? 'bg-status-critical-bg text-status-critical'
+                              : 'bg-status-warning-bg text-status-warning'
+                          }`}
+                        >
+                          {insp.overall}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-muted whitespace-nowrap font-medium">
+                        {failedCount > 0 ? (
+                          <span className="text-status-critical font-bold">{failedCount} failed</span>
+                        ) : (
+                          <span className="text-status-success font-semibold">All {totalCount} passed</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-6 text-right whitespace-nowrap">
+                        <Link
+                          to={`/inspections/${insp.id}`}
+                          className="h-7 px-2.5 rounded-lg bg-primary-soft hover:bg-primary/20 text-primary font-semibold text-xs inline-flex items-center space-x-1"
+                        >
+                          <span>View</span>
+                        </Link>
                       </td>
                     </tr>
                   );

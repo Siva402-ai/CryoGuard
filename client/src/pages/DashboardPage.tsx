@@ -434,6 +434,17 @@ export const DashboardPage: React.FC = () => {
                         </div>
                       )}
 
+                      {alert.type === 'INSPECTION' && (
+                        <div className="mt-1">
+                          <Link
+                            to={alert.source_id ? `/inspections/${alert.source_id}` : '/inspections'}
+                            className="text-[11px] font-semibold text-primary hover:underline inline-flex items-center space-x-1"
+                          >
+                            <span>View Inspection Audit &rarr;</span>
+                          </Link>
+                        </div>
+                      )}
+
                       <div className="mt-2 flex items-center justify-between text-[11px] text-muted">
                         {alert.type === 'MAINTENANCE' ? (
                           <Link
@@ -441,6 +452,13 @@ export const DashboardPage: React.FC = () => {
                             className="font-semibold uppercase tracking-wider text-[10px] text-status-info hover:underline"
                           >
                             MAINTENANCE
+                          </Link>
+                        ) : alert.type === 'INSPECTION' ? (
+                          <Link
+                            to={alert.source_id ? `/inspections/${alert.source_id}` : '/inspections'}
+                            className="font-semibold uppercase tracking-wider text-[10px] text-status-critical hover:underline"
+                          >
+                            INSPECTION
                           </Link>
                         ) : (
                           <span className="font-semibold uppercase tracking-wider text-[10px]">
