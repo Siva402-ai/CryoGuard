@@ -33,6 +33,12 @@ import {
   PatchRestockRequestInput,
 } from '../types/inventory';
 
+export function isDiscreteUnit(unit: string): boolean {
+  const u = (unit || '').trim().toLowerCase();
+  const continuous = ['l', 'liter', 'liters', 'litre', 'litres', 'ml', 'gal', 'gallon', 'gallons', 'kg', 'kilogram', 'kilograms', 'g', 'gram', 'grams', 'lb', 'lbs', 'm3', 'bar', 'psi'];
+  return !continuous.includes(u);
+}
+
 export const InventoryPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'stock' | 'restock'>('stock');
@@ -978,7 +984,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onClose, onSubmit, isLoadin
               <input
                 type="number"
                 min="0"
-                step="any"
+                step={isDiscreteUnit(unit) ? "1" : "any"}
                 required
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
@@ -993,8 +999,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ onClose, onSubmit, isLoadin
               </label>
               <input
                 type="number"
-                min="0.1"
-                step="any"
+                min={isDiscreteUnit(unit) ? "1" : "0.1"}
+                step={isDiscreteUnit(unit) ? "1" : "any"}
                 required
                 value={minQuantity}
                 onChange={(e) => setMinQuantity(Number(e.target.value))}
@@ -1124,8 +1130,8 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, onClose, onSubmit, 
             </label>
             <input
               type="number"
-              min="0.1"
-              step="any"
+              min={isDiscreteUnit(unit) ? "1" : "0.1"}
+              step={isDiscreteUnit(unit) ? "1" : "any"}
               required
               value={minQuantity}
               onChange={(e) => setMinQuantity(Number(e.target.value))}
@@ -1178,6 +1184,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ item, onClose, onSu
   const [reason, setReason] = useState<string>('');
 
   const numQty = parseFloat(rawQuantity) || 0;
+  const isDiscrete = isDiscreteUnit(item.unit);
+  const isFractional = isDiscrete && rawQuantity !== '' && !Number.isInteger(numQty);
 
   // Compute live preview
   let newQuantity = item.quantity;
@@ -1195,7 +1203,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ item, onClose, onSu
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isNegative) return;
+    if (isNegative || isFractional) return;
     if (type === 'ADJUST' && !reason.trim()) return;
 
     onSubmit({
@@ -1333,7 +1341,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ item, onClose, onSu
           {rawQuantity && (
             <div
               className={`p-4 rounded-xl border transition-all ${
-                isNegative
+                isNegative || isFractional
                   ? 'bg-status-critical-bg/60 border-status-critical text-status-critical'
                   : isCritBelow
                   ? 'bg-status-critical-bg/30 border-status-critical/50 text-navy'
@@ -1349,7 +1357,12 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ item, onClose, onSu
                 </span>
               </div>
 
-              {isNegative ? (
+              {isFractional ? (
+                <p className="text-xs font-bold text-status-critical mt-1 flex items-center space-x-1">
+                  <AlertTriangle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                  <span>Cannot submit: quantity must be an integer (whole number) for discrete unit '{item.unit}'.</span>
+                </p>
+              ) : isNegative ? (
                 <p className="text-xs font-bold text-status-critical mt-1 flex items-center space-x-1">
                   <AlertTriangle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
                   <span>Cannot submit: stock would drop below zero ({newQuantity} {item.unit}).</span>
@@ -1383,7 +1396,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ item, onClose, onSu
             </button>
             <button
               type="submit"
-              disabled={isLoading || isNegative || !rawQuantity || numQty === 0}
+              disabled={isLoading || isNegative || isFractional || !rawQuantity || numQty === 0}
               className="px-6 py-2.5 rounded-full text-sm font-semibold bg-primary text-white hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50"
             >
               {isLoading ? 'Recording...' : 'Submit Transaction'}
@@ -1570,7 +1583,7 @@ const RestockRequestModal: React.FC<RestockRequestModalProps> = ({
             <input
               type="number"
               min="1"
-              step="any"
+              step={isDiscreteUnit(item.unit) ? "1" : "any"}
               required
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
@@ -1680,7 +1693,7 @@ const NewRestockRequestModal: React.FC<NewRestockRequestModalProps> = ({
             <input
               type="number"
               min="1"
-              step="any"
+              step={isDiscreteUnit(selectedItem?.unit || '') ? "1" : "any"}
               required
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}

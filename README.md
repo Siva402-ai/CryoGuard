@@ -123,5 +123,20 @@ Optional flags:
 ### Telemetry Ingestion (Simulator)
 - `POST /api/readings` - Ingest sensor readings (requires `x-api-key: SIMULATOR_API_KEY`)
 
-### Administration (ADMIN only)
-- `GET /api/users` - List all system staff and roles
+### Reports (Phase 7)
+- `GET /api/reports/temperature-trend?from=&to=&equipmentId=&format=json|csv` - Per-tank aggregated temperature trend buckets
+- `GET /api/reports/alerts-by-month?from=&to=&equipmentId=&format=json|csv` - Alert counts grouped by month, severity, and type
+- `GET /api/reports/maintenance-history?from=&to=&equipmentId=&format=json|csv` - Maintenance task statistics, monthly distribution, and task logs
+- `GET /api/reports/inventory-consumption?from=&to=&format=json|csv` - Material consumption IN/OUT totals, net change, and weekly usage
+
+### Dev Tooling: Historical Demo Data
+
+To populate the Reports charts with 6 months of historical demo data (resolved alerts, completed maintenance tasks, and inventory transactions):
+
+```bash
+cd server
+npm run seed:demo-history
+```
+
+*Note: This command is idempotent and will skip if historical demo data already exists. It inserts back-dated inventory transaction records without altering live `items.quantity` levels.*
+

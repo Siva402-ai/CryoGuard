@@ -7,6 +7,12 @@ import { writeAudit } from '../utils/audit';
 
 export type StockStatus = 'GOOD' | 'LOW' | 'CRITICAL';
 
+export function isDiscreteUnit(unit: string): boolean {
+  const u = unit.trim().toLowerCase();
+  const continuous = ['l', 'liter', 'liters', 'litre', 'litres', 'ml', 'gal', 'gallon', 'gallons', 'kg', 'kilogram', 'kilograms', 'g', 'gram', 'grams', 'lb', 'lbs', 'm3', 'bar', 'psi'];
+  return !continuous.includes(u);
+}
+
 export function computeStockStatus(quantity: number, minQuantity: number): StockStatus {
   if (quantity < 0.5 * minQuantity) {
     return 'CRITICAL';
@@ -251,6 +257,21 @@ export const createInventoryItem = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const userName = req.user?.name || req.user?.email || 'Authorized User';
 
+    if (isDiscreteUnit(unit)) {
+      if (!Number.isInteger(quantity)) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: `Initial quantity must be a whole number (integer) for discrete unit '${unit}'. Fractional values are not allowed.`,
+        });
+      }
+      if (!Number.isInteger(min_quantity)) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: `Minimum threshold quantity must be a whole number (integer) for discrete unit '${unit}'. Fractional values are not allowed.`,
+        });
+      }
+    }
+
     const existing = await prisma.inventoryItem.findFirst({
       where: { name: { equals: name, mode: 'insensitive' } },
     });
@@ -350,6 +371,14 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const userName = req.user?.name || req.user?.email || 'Authorized User';
 
+    const finalUnit = unit !== undefined ? unit : existing.unit;
+    if (isDiscreteUnit(finalUnit) && min_quantity !== undefined && !Number.isInteger(min_quantity)) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: `Minimum threshold quantity must be a whole number (integer) for discrete unit '${finalUnit}'. Fractional values are not allowed.`,
+      });
+    }
+
     let alertResult: AlertEvalResult | null = null;
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -421,6 +450,25 @@ export const recordTransaction = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized', message: 'User authentication required' });
     }
 
+    // Check item existence and unit before transaction
+    const targetItem = await prisma.inventoryItem.findUnique({
+      where: { id },
+    });
+
+    if (!targetItem) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: `Inventory item with ID '${id}' was not found.`,
+      });
+    }
+
+    if (isDiscreteUnit(targetItem.unit) && !Number.isInteger(quantity)) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: `Transaction quantity must be a whole number (integer) for discrete unit '${targetItem.unit}'. Fractional amounts (e.g. ${quantity}) are not allowed.`,
+      });
+    }
+
     // Determine signed delta
     let delta = 0;
     if (type === 'IN') {
@@ -437,17 +485,6 @@ export const recordTransaction = async (req: Request, res: Response) => {
 
     try {
       await prisma.$transaction(async (tx) => {
-        // Check item existence first
-        const itemExists = await tx.inventoryItem.findUnique({
-          where: { id },
-        });
-
-        if (!itemExists) {
-          const notFoundErr: any = new Error(`Inventory item with ID '${id}' was not found.`);
-          notFoundErr.statusCode = 404;
-          throw notFoundErr;
-        }
-
         // Atomic update protecting against negative quantity under parallel requests
         const updatedRows: any[] = await tx.$queryRaw`
           UPDATE "inventory_items"
@@ -458,7 +495,7 @@ export const recordTransaction = async (req: Request, res: Response) => {
 
         if (!updatedRows || updatedRows.length === 0) {
           const oversellErr: any = new Error(
-            `Insufficient stock. Current quantity is ${itemExists.quantity} ${itemExists.unit}. Transaction would result in negative stock.`,
+            `Insufficient stock. Current quantity is ${targetItem.quantity} ${targetItem.unit}. Transaction would result in negative stock.`,
           );
           oversellErr.statusCode = 400;
           throw oversellErr;
@@ -668,6 +705,13 @@ export const createRestockRequest = async (req: Request, res: Response) => {
       return res.status(404).json({
         error: 'Not Found',
         message: `Inventory item with ID '${item_id}' was not found.`,
+      });
+    }
+
+    if (isDiscreteUnit(item.unit) && !Number.isInteger(quantity)) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: `Restock requested quantity must be a whole number (integer) for discrete unit '${item.unit}'. Fractional values (e.g. ${quantity}) are not allowed.`,
       });
     }
 

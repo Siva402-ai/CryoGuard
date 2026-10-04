@@ -13,10 +13,7 @@ import { MaintenancePage } from './pages/MaintenancePage';
 import { InspectionsPage } from './pages/InspectionsPage';
 import { InspectionDetailPage } from './pages/InspectionDetailPage';
 import { InventoryPage } from './pages/InventoryPage';
-import { PlaceholderPage } from './pages/PlaceholderPage';
-import {
-  BarChart3,
-} from 'lucide-react';
+import { ReportsPage } from './pages/ReportsPage';
 
 export default function App() {
   return (
@@ -37,17 +34,7 @@ export default function App() {
               <Route path="/inspections" element={<InspectionsPage />} />
               <Route path="/inspections/:id" element={<InspectionDetailPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
-              <Route
-                path="/reports"
-                element={
-                  <PlaceholderPage
-                    title="Compliance & Telemetry Reports"
-                    subtitle="Historical trends, consumption logs, and CSV data export"
-                    phase="Phase 7"
-                    icon={BarChart3}
-                  />
-                }
-              />
+              <Route path="/reports" element={<ReportsPage />} />
 
               {/* Admin Only Route */}
               <Route element={<RoleProtectedRoute allowedRole="ADMIN" />}>

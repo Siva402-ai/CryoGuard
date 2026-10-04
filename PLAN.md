@@ -314,7 +314,7 @@ Values are eyeballed from the Ciklum site; tweak the hex values in one place (Ta
 | Info / scheduled | `#1A2BC3` | `#EEF1FF` |
 | Offline / neutral | `#5B6578` | `#EEF1F6` |
 
-Chart series order: `#1A2BC3`, `#4AA8B5`, `#7EF0C9`, `#94A3B8`. Thin 2px lines, light grid `#EEF1F6`, no glow, no 3D.
+Chart series order: `#1A2BC3`, `#4AA8B5`, `#7EF0C9`, `#94A3B8`, `#6B7BE8`, `#0B1633`. Thin 2px lines, light grid `#EEF1F6`, no glow, no 3D.
 
 ### Typography
 - Font: **Plus Jakarta Sans** (fallback: Inter, system-ui, sans-serif), loaded locally or via the Google Fonts link in `index.html`.

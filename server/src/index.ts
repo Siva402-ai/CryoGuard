@@ -8,6 +8,7 @@ import { apiRouter } from './routes';
 import { redis, redisSub } from './db/redis';
 import { initBackgroundJobs, systemWorker, systemQueue } from './jobs';
 
+// Trigger tsx watch reload Phase 7
 dotenv.config();
 
 const app = express();

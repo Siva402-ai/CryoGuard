@@ -9,6 +9,7 @@ import { dashboardRouter } from './dashboard.routes';
 import { maintenanceRouter } from './maintenance.routes';
 import { inspectionTemplateRouter, inspectionRouter } from './inspection.routes';
 import { inventoryRouter, restockRouter } from './inventory.routes';
+import { reportRouter } from './report.routes';
 
 export const apiRouter = Router();
 
@@ -24,3 +25,5 @@ apiRouter.use('/inspection-templates', inspectionTemplateRouter);
 apiRouter.use('/inspections', inspectionRouter);
 apiRouter.use('/inventory', inventoryRouter);
 apiRouter.use('/restock-requests', restockRouter);
+apiRouter.use('/reports', reportRouter);
+
